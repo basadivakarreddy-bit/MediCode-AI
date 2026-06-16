@@ -69,7 +69,7 @@ import { InteractiveHero } from "./components/InteractiveHero";
 import { HealthTimeline } from "./components/HealthTimeline";
 import { FAQContact } from "./components/FAQContact";
 
-const API_BASE_URL = (((import.meta as any).env?.VITE_API_BASE_URL) as string || "").replace(/\/$/, "");
+const API_BASE_URL = (((import.meta as any).env?.VITE_API_BASE_URL) as string || "https://medicode-ai.onrender.com").replace(/\/$/, "");
 
 const LABELS: Record<string, Record<string, string>> = {
   en: {
