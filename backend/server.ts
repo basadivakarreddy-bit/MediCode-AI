@@ -527,7 +527,7 @@ app.post("/api/analyze-document", async (req, res): Promise<any> => {
     return res.json({
       success: true,
       source: "error_fallback_demo",
-       message: `API extraction failed (${error.message}). Displaying pre-analyzed expert sample report to illustrate MediDecode dashboard capabilities.`,
+       message: `API extraction failed (${error.message}). Displaying pre-analyzed expert sample report to illustrate MediCode dashboard capabilities.`,
       data: requestedType === "prescription" ? DEMO_PRESCRIPTION : DEMO_LAB_REPORT
     });
   }
@@ -618,7 +618,7 @@ app.post("/api/chat", async (req, res): Promise<any> => {
     const documentContextString = JSON.stringify(context || {});
     
     const systemPrompt = `
-      You are MediDecode AI, a premium, futuristic, compassionate AI health companion.
+      You are MediCode AI, a premium, futuristic, compassionate AI health companion.
       You are assisting a patient relative to understand their analysed medical document (Prescription or Lab Report).
       
       Here is the complete JSON context of their analyzed document:
@@ -677,7 +677,7 @@ app.post("/api/chat", async (req, res): Promise<any> => {
       success: true,
       source: "chat_fallback",
       message: `Chat assistant quota busy (${error.message}). Switched to local clinical knowledge advisor.`,
-      text: `Hello! I am MediDecode's offline clinical advisor assistant. Due to high demand or quota limits on our server's live AI keys, I am currently responding in offline mode.
+      text: `Hello! I am MediCode's offline clinical advisor assistant. Due to high demand or quota limits on our server's live AI keys, I am currently responding in offline mode.
 
 Based on your current analyzed document (Patient: **${context?.patient?.name || "Emily Johnson"}**, Health Score: **${context?.healthScore || "N/A"}**):
 - **Adherence & Safety**: Please ensure all medications are taken exactly as directed on your medical prescription schedules.
@@ -710,7 +710,7 @@ async function startServer() {
   if (!process.env.VERCEL) {
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`====================================================`);
-      console.log(` MediDecode AI server running at http://0.0.0.0:${PORT}`);
+      console.log(` MediCode AI server running at http://0.0.0.0:${PORT}`);
       console.log(`====================================================`);
     });
   }

@@ -19,7 +19,7 @@ export function FAQContact({ theme }: FAQContactProps) {
     },
     {
       question: "Which file formats can I upload for decoding?",
-      answer: "MediDecode AI fully supports JPEG, PNG, TIFF, and digital clinical PDF documents, supporting standard resolutions from flatbed scanners, phone camera captures, and lab email attachments."
+      answer: "MediCode AI fully supports JPEG, PNG, TIFF, and digital clinical PDF documents, supporting standard resolutions from flatbed scanners, phone camera captures, and lab email attachments."
     },
     {
       question: "Can I download or print analyzed reports?",
@@ -27,7 +27,7 @@ export function FAQContact({ theme }: FAQContactProps) {
     },
     {
       question: "Does this AI model replace a clinical physician's consultation?",
-      answer: "Absolutely not. MediDecode AI is designed solely for patient data education, jargon Translation, and lifestyle awareness. It is NOT a clinical diagnosis, treat, or direct medication adjustment protocol. Always review important medicine schedules with your primary medical doctor."
+      answer: "Absolutely not. MediCode AI is designed solely for patient data education, jargon Translation, and lifestyle awareness. It is NOT a clinical diagnosis, treat, or direct medication adjustment protocol. Always review important medicine schedules with your primary medical doctor."
     },
     {
       question: "Are my scanned transcripts stored permanently on remote servers?",

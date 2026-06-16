@@ -1,5 +1,5 @@
 {
-  "name": "MediDecode AI",
+  "name": "MediCode AI",
   "description": "Premium futuristic SaaS tool to translate complex medical documents, decipher handwritten prescriptions, analyze lab reports, and explain health markers simply.",
   "requestFramePermissions": ["camera", "microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
