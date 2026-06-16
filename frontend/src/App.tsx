@@ -69,6 +69,8 @@ import { InteractiveHero } from "./components/InteractiveHero";
 import { HealthTimeline } from "./components/HealthTimeline";
 import { FAQContact } from "./components/FAQContact";
 
+const API_BASE_URL = (((import.meta as any).env?.VITE_API_BASE_URL) as string || "").replace(/\/$/, "");
+
 const LABELS: Record<string, Record<string, string>> = {
   en: {
     extractedPrescriptionResult: "Your Extracted Prescription Result",
@@ -484,7 +486,7 @@ export function AppContent(props: {
       setIsTranslating(true);
       try {
         const langMap = { te: "Telugu", hi: "Hindi" };
-        const res = await fetch("/api/translate", {
+        const res = await fetch(`${API_BASE_URL}/api/translate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -1077,7 +1079,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
         setTimeout(() => setLoadingStep("Translating pharmacology indicators..."), 2400);
 
         try {
-          const response = await fetch("/api/analyze-document", {
+          const response = await fetch(`${API_BASE_URL}/api/analyze-document`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -1230,7 +1232,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
     setIsAiTyping(true);
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
