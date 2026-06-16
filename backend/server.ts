@@ -403,6 +403,11 @@ const DEMO_LAB_REPORT = {
   ]
 };
 
+// Health-check / Ping endpoint for uptime check
+app.get('/ping', (req, res) => {
+  res.status(200).json({ status: 'alive' });
+});
+
 // API: Deconstruct / analyze medical documents via Gemini Vision
 app.post("/api/analyze-document", async (req, res): Promise<any> => {
   try {
