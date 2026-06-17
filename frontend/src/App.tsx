@@ -27,6 +27,7 @@ import {
   RotateCw, 
   Camera, 
   User, 
+  LogOut,
   Plus, 
   Moon, 
   Sun, 
@@ -319,6 +320,7 @@ export function AppContent(props: {
   const [isTranslating, setIsTranslating] = useState<boolean>(false);
   const [translatedCache, setTranslatedCache] = useState<Record<string, Record<string, any>>>(PRELOADED_TRANSLATIONS);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState<boolean>(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState<boolean>(false);
   const translationFetchInProgress = useRef<Record<string, boolean>>({});
   
   // Clinical Session States
@@ -735,6 +737,8 @@ export function AppContent(props: {
   const [isSignUp, setIsSignUp] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
+  const [authName, setAuthName] = useState("");
+  const [authConfirmPassword, setAuthConfirmPassword] = useState("");
   const [guestUser, setGuestUser] = useState<string | null>("Emily Johnson (Guest Partner)");
   const [showMemberForm, setShowMemberForm] = useState(false);
   
@@ -1800,10 +1804,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
               </div>
-              <div className="flex flex-col text-left">
-                <span className={`text-[9px] font-bold tracking-widest font-mono uppercase leading-none mb-0.5 ${
-                  theme === "dark" ? "text-slate-500" : "text-slate-400"
-                }`}>Clinical Intelligence</span>
+              <div className="text-left flex items-center">
                 <span className={`text-lg font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r group-hover:from-cyan-400 group-hover:to-blue-400 transition-all duration-300 ${
                   theme === "dark"
                     ? "from-cyan-400 via-blue-400 to-indigo-400"
@@ -1899,61 +1900,80 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
               </div>
 
               {/* GUEST MODE STATE INDICATOR / AUTH TRIGGERS */}
-              {props.isClerk ? (
-                props.isSignedIn ? (
-                  <button
-                    onClick={() => props.signOut && props.signOut()}
-                    className={`flex items-center gap-1.5 px-4.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-300 cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-95 focus:outline-none border ${
-                      theme === "dark"
-                        ? "bg-slate-900/80 border-rose-500/30 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 hover:border-rose-400/50 shadow-rose-950/20"
-                        : "bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white border-transparent shadow-rose-100"
-                    }`}
-                    title="Click to Sign Out from Clerk"
-                  >
-                    <User className="w-3.5 h-3.5" />
-                    <span className="truncate max-w-[120px]">Sign Out ({props.user?.firstName || props.user?.username || props.user?.primaryEmailAddress?.emailAddress?.split('@')[0]})</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => { setIsSignUp(false); setAuthModal(true); }}
-                    className={`flex items-center gap-1.5 px-4.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-300 cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-95 focus:outline-none border ${
-                      theme === "dark"
-                        ? "bg-gradient-to-r from-cyan-500/10 to-blue-500/10 hover:from-cyan-500/20 hover:to-blue-500/20 border-cyan-500/30 hover:border-cyan-400/50 text-cyan-400 hover:text-cyan-300 shadow-cyan-950/20"
-                        : "bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white border-transparent shadow-cyan-100"
-                    }`}
-                  >
-                    <User className="w-3.5 h-3.5" />
-                    <span>Login</span>
-                  </button>
-                )
+              {((props.isClerk ? props.isSignedIn : (guestUser && guestUser.includes("(Verified User)"))) ? (
+                (() => {
+                  const nameStr = props.isClerk
+                    ? (props.user?.firstName || props.user?.username || props.user?.primaryEmailAddress?.emailAddress?.split('@')[0] || "User")
+                    : (guestUser ? guestUser.replace(" (Verified User)", "") : "User");
+                  const initialLetter = nameStr.charAt(0).toUpperCase();
+                  
+                  return (
+                    <div className="relative">
+                      {/* Avatar Button containing the starting letter */}
+                      <button
+                        onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-black transition-all duration-300 cursor-pointer shadow-md select-none border-2 hover:scale-105 active:scale-95 focus:outline-none ${
+                          theme === "dark"
+                            ? "bg-gradient-to-br from-cyan-500 to-blue-600 text-white border-cyan-500/50 shadow-cyan-500/15 hover:shadow-cyan-400/30"
+                            : "bg-gradient-to-br from-cyan-600 to-indigo-600 text-white border-white shadow-md hover:shadow-cyan-200"
+                        }`}
+                        title={`Logged in as ${nameStr}. Click to view details.`}
+                      >
+                        {initialLetter}
+                      </button>
+
+                      {isProfileDropdownOpen && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setIsProfileDropdownOpen(false)} />
+                          <div className={`absolute right-0 mt-2 w-52 rounded-xl border shadow-xl z-50 p-4 transform origin-top-right transition-all duration-200 ${
+                            theme === "dark" ? "bg-slate-950 border-slate-800 text-slate-200 shadow-black/80" : "bg-white border-slate-150 text-slate-700 shadow-slate-200/80"
+                          }`}>
+                            <div className="space-y-1 mb-3 pb-2.5 border-b border-sans border-dashed border-slate-850">
+                              <p className={`text-[10px] font-bold tracking-widest uppercase ${theme === "dark" ? "text-slate-500" : "text-slate-400"}`}>Active Profile</p>
+                              <p className="text-xs font-bold truncate max-w-full">{nameStr}</p>
+                              {props.isClerk && props.user?.primaryEmailAddress?.emailAddress && (
+                                <p className={`text-[10px] truncate max-w-full ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
+                                  {props.user.primaryEmailAddress.emailAddress}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => {
+                                setIsProfileDropdownOpen(false);
+                                if (props.isClerk && props.signOut) {
+                                  props.signOut();
+                                } else {
+                                  setGuestUser("Emily Johnson (Guest Partner)");
+                                }
+                              }}
+                              className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-black transition-all duration-300 cursor-pointer border ${
+                                theme === "dark"
+                                  ? "bg-slate-900 border-rose-500/30 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 hover:border-rose-400/50 shadow-rose-950/20"
+                                  : "bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-600 hover:text-rose-700"
+                              }`}
+                            >
+                              <LogOut className="w-3.5 h-3.5" />
+                              <span>Sign Out</span>
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()
               ) : (
-                guestUser && guestUser.includes("(Verified User)") ? (
-                  <button
-                    onClick={() => setGuestUser("Emily Johnson (Guest Partner)")}
-                    className={`flex items-center gap-1.5 px-4.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-300 cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-95 focus:outline-none border ${
-                      theme === "dark"
-                        ? "bg-slate-900/80 border-rose-500/30 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 hover:border-rose-400/50 shadow-rose-950/20"
-                        : "bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white border-transparent shadow-rose-100"
-                    }`}
-                    title="Click to Logout Sandbox Session"
-                  >
-                    <User className="w-3.5 h-3.5" />
-                    <span className="truncate max-w-[120px]">Sign Out ({guestUser.replace(" (Verified User)", "")})</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => { setIsSignUp(false); setAuthModal(true); }}
-                    className={`flex items-center gap-1.5 px-4.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-300 cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-95 focus:outline-none border ${
-                      theme === "dark"
-                        ? "bg-gradient-to-r from-cyan-500/10 to-blue-500/10 hover:from-cyan-500/20 hover:to-blue-500/20 border-cyan-500/30 hover:border-cyan-400/50 text-cyan-400 hover:text-cyan-300 shadow-cyan-950/20"
-                        : "bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white border-transparent shadow-cyan-100"
-                    }`}
-                  >
-                    <User className="w-3.5 h-3.5" />
-                    <span>Login</span>
-                  </button>
-                )
-              )}
+                <button
+                  onClick={() => { setIsSignUp(false); setAuthModal(true); }}
+                  className={`flex items-center gap-1.5 px-4.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-300 cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-95 focus:outline-none border ${
+                    theme === "dark"
+                      ? "bg-gradient-to-r from-cyan-500/10 to-blue-500/10 hover:from-cyan-500/20 hover:to-blue-500/20 border-cyan-500/30 hover:border-cyan-400/50 text-cyan-400 hover:text-cyan-300 shadow-cyan-950/20"
+                      : "bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white border-transparent shadow-cyan-100"
+                  }`}
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span>Login</span>
+                </button>
+              ))}
 
               {/* MOBILE HAMBURGER */}
               <button
@@ -3990,6 +4010,20 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
               {/* Form Content */}
               <div className="p-8 space-y-6">
                 
+                {/* Name field (Sign Up mode only) */}
+                {isSignUp && (
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label className="text-slate-300 text-[13px] font-medium">Full Name</label>
+                    <input
+                      type="text"
+                      placeholder="Jane Doe"
+                      value={authName}
+                      onChange={(e) => setAuthName(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg bg-[#0c1017] border border-slate-800/80 text-white focus:outline-none focus:border-[#009fff] focus:ring-1 focus:ring-[#009fff] transition-colors placeholder-slate-600 text-sm"
+                    />
+                  </div>
+                )}
+
                 {/* Email Address */}
                 <div className="flex flex-col gap-1.5 text-left">
                   <label className="text-slate-300 text-[13px] font-medium">Email Address</label>
@@ -4013,6 +4047,20 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                     className="w-full px-4 py-3 rounded-lg bg-[#0c1017] border border-slate-800/80 text-white focus:outline-none focus:border-[#009fff] focus:ring-1 focus:ring-[#009fff] transition-colors placeholder-slate-600 text-sm"
                   />
                 </div>
+
+                {/* Confirm Password field (Sign Up mode only) */}
+                {isSignUp && (
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label className="text-slate-300 text-[13px] font-medium">Confirm Password</label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={authConfirmPassword}
+                      onChange={(e) => setAuthConfirmPassword(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg bg-[#0c1017] border border-slate-800/80 text-white focus:outline-none focus:border-[#009fff] focus:ring-1 focus:ring-[#009fff] transition-colors placeholder-slate-600 text-sm"
+                    />
+                  </div>
+                )}
 
                 {/* Clerk Captcha element for bot protection in custom sign-up flow */}
                 {props.isClerk && isSignUp && (
@@ -4041,8 +4089,16 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                 {/* Submit button */}
                 <button 
                   onClick={async () => {
+                    if (isSignUp && !authName) {
+                      alert("Please enter your name.");
+                      return;
+                    }
                     if (!authEmail || !authPassword) {
                       alert("Please enter both your email address and password.");
+                      return;
+                    }
+                    if (isSignUp && authPassword !== authConfirmPassword) {
+                      alert("Passwords do not match!");
                       return;
                     }
                     if (props.isClerk) {
@@ -4052,12 +4108,15 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                           const res = await props.clerkSignUp.create({
                             emailAddress: authEmail,
                             password: authPassword,
+                            firstName: authName,
                           });
                           if (res.status === "complete") {
                             await props.setSignUpActive({ session: res.createdSessionId });
                             setAuthModal(false);
                             setAuthEmail("");
                             setAuthPassword("");
+                            setAuthName("");
+                            setAuthConfirmPassword("");
                           } else if (res.status === "missing_requirements" && res.unverifiedFields?.includes("email_address")) {
                             // If email verification is active, Clerk requests the verification code
                             const code = prompt("Clerk sent a registration code to your email. Please enter it here:");
@@ -4068,6 +4127,8 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                 setAuthModal(false);
                                 setAuthEmail("");
                                 setAuthPassword("");
+                                setAuthName("");
+                                setAuthConfirmPassword("");
                               } else {
                                 alert("Verify complete status: " + completeSignup.status);
                               }
@@ -4090,6 +4151,8 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                             setAuthModal(false);
                             setAuthEmail("");
                             setAuthPassword("");
+                            setAuthName("");
+                            setAuthConfirmPassword("");
                           } else {
                             alert("Clerk Sign In Status: " + res.status);
                           }
@@ -4098,11 +4161,13 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                         }
                       }
                     } else {
-                      const displayName = authEmail ? authEmail.split('@')[0] : "Emily Johnson";
+                      const displayName = isSignUp && authName ? authName : (authEmail ? authEmail.split('@')[0] : "Emily Johnson");
                       setGuestUser(`${displayName.charAt(0).toUpperCase() + displayName.slice(1)} (Verified User)`);
                       setAuthModal(false);
                       setAuthEmail("");
                       setAuthPassword("");
+                      setAuthName("");
+                      setAuthConfirmPassword("");
                     }
                   }}
                   className="w-full py-3.5 px-4 rounded-lg bg-[#009fff] hover:bg-[#008be5] text-white font-bold text-sm shadow-[0_4px_14px_rgba(0,159,255,0.25)] transition-all active:scale-[0.98] focus:outline-none cursor-pointer text-center"
