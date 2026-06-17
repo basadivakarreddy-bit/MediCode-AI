@@ -550,6 +550,9 @@ app.post("/api/analyze-document", async (req, res): Promise<any> => {
   }
 });
 
+// Server-side translation in-memory cache to guarantee sub-millisecond return for duplicate translation batches
+const serverTranslationCache = new Map<string, any>();
+
 // API: Translate Medical Document data to Telugu or Hindi via Gemini
 app.post("/api/translate", async (req, res): Promise<any> => {
   const { docData, targetLang } = req.body || {};
@@ -559,6 +562,23 @@ app.post("/api/translate", async (req, res): Promise<any> => {
       return res.json({
         success: false,
         message: "Gemini API client not configured or offline."
+      });
+    }
+
+    if (!docData || !targetLang) {
+      return res.json({
+        success: false,
+        message: "Missing translation payload (docData) or target language (targetLang)."
+      });
+    }
+
+    // Verify cache to keep translate load 0ms and bypass network / LLM generation latency on repeat
+    const cacheKey = `${JSON.stringify(docData)}_${targetLang}`;
+    if (serverTranslationCache.has(cacheKey)) {
+      console.log(`[API Cache Hit] Instantly serving medical translate map for target: ${targetLang}`);
+      return res.json({
+        success: true,
+        data: serverTranslationCache.get(cacheKey)
       });
     }
 
@@ -577,8 +597,9 @@ app.post("/api/translate", async (req, res): Promise<any> => {
       ${JSON.stringify(docData)}
     `;
 
+    // Upgrade key basic text tasks to gemini-3.5-flash for optimized processing speeds
     const response = await generateContentWithFallback({
-      model: "gemini-3.1-flash-lite",
+      model: "gemini-3.5-flash",
       contents: [
         { text: prompt }
       ],
@@ -589,6 +610,11 @@ app.post("/api/translate", async (req, res): Promise<any> => {
 
     const textOutput = getResponseText(response) || "{}";
     const parsedData = safeJsonParse(textOutput);
+
+    // Save success response map to server cache
+    if (parsedData && Object.keys(parsedData).length > 0) {
+      serverTranslationCache.set(cacheKey, parsedData);
+    }
 
     return res.json({
       success: true,

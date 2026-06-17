@@ -319,6 +319,7 @@ export function AppContent(props: {
   const [isTranslating, setIsTranslating] = useState<boolean>(false);
   const [translatedCache, setTranslatedCache] = useState<Record<string, Record<string, any>>>(PRELOADED_TRANSLATIONS);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState<boolean>(false);
+  const translationFetchInProgress = useRef<Record<string, boolean>>({});
   
   // Clinical Session States
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(INITIAL_FAMILY_MEMBERS);
@@ -472,20 +473,71 @@ export function AppContent(props: {
   const [selectedDocId, setSelectedDocId] = useState<string>("doc-1");
   const activeDoc = documents.find(d => d.id === selectedDocId) || documents[0];
 
+  // Prefetch translations in the background for any active document so user toggles are instant
+  useEffect(() => {
+    if (!activeDoc || !activeDoc.data) return;
+
+    const docId = activeDoc.id;
+    const languages: ("te" | "hi")[] = ["te", "hi"];
+    const langMap = { te: "Telugu", hi: "Hindi" };
+
+    languages.forEach(async (lang) => {
+      const cacheKey = `${docId}_${lang}`;
+      
+      // If already in state cache or fetching, skip
+      if (translatedCache[docId]?.[lang] || translationFetchInProgress.current[cacheKey]) {
+        return;
+      }
+
+      translationFetchInProgress.current[cacheKey] = true;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/translate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            docData: activeDoc.data,
+            targetLang: langMap[lang]
+          })
+        });
+        const parsed = await res.json();
+        if (parsed.success && parsed.data) {
+          setTranslatedCache(prev => ({
+            ...prev,
+            [docId]: {
+              ...prev[docId],
+              [lang]: parsed.data
+            }
+          }));
+        } else {
+          // Reset key so it can be re-fetched on demand if needed
+          translationFetchInProgress.current[cacheKey] = false;
+        }
+      } catch (err) {
+        console.error(`[Translation Background Prefetch] Error pre-translating to ${lang}:`, err);
+        translationFetchInProgress.current[cacheKey] = false;
+      }
+    });
+  }, [activeDoc?.id, translatedCache]);
+
+  // Handle active language translation request on demand (shows loader only if prefetching hasn't finished yet)
   useEffect(() => {
     if (selectedLanguage === "en" || !activeDoc || !activeDoc.data) return;
     
     // Check if we already have it in cache
     const cacheForDoc = translatedCache[activeDoc.id];
     if (cacheForDoc && cacheForDoc[selectedLanguage]) {
-      return; // Already translated!
+      return; // Already translated and ready!
     }
 
     // Otherwise, translate on the fly!
     const triggerTranslation = async () => {
       setIsTranslating(true);
+      const docId = activeDoc.id;
+      const langMap = { te: "Telugu", hi: "Hindi" };
+      const cacheKey = `${docId}_${selectedLanguage}`;
+      
+      translationFetchInProgress.current[cacheKey] = true;
       try {
-        const langMap = { te: "Telugu", hi: "Hindi" };
         const res = await fetch(`${API_BASE_URL}/api/translate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -498,16 +550,18 @@ export function AppContent(props: {
         if (parsed.success && parsed.data) {
           setTranslatedCache(prev => ({
             ...prev,
-            [activeDoc.id]: {
-              ...prev[activeDoc.id],
+            [docId]: {
+              ...prev[docId],
               [selectedLanguage]: parsed.data
             }
           }));
         } else {
           console.warn("Dynamic translation failed, falling back to English structural labels.", parsed.message);
+          translationFetchInProgress.current[cacheKey] = false;
         }
       } catch (err) {
         console.error("Fly translation to language failed:", err);
+        translationFetchInProgress.current[cacheKey] = false;
       } finally {
         setIsTranslating(false);
       }
