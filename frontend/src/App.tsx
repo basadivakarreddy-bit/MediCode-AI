@@ -27,7 +27,6 @@ import {
   RotateCw, 
   Camera, 
   User, 
-  LogOut,
   Plus, 
   Moon, 
   Sun, 
@@ -116,7 +115,54 @@ const LABELS: Record<string, Record<string, string>> = {
     warningsTab: "Warnings",
     recommendationsTab: "Recommendations",
     adherenceMetricsTab: "Adherence & Metrics",
-    translating: "Translating clinical records..."
+    translating: "Translating clinical records...",
+    
+    // Additional Alarms & Schedulers
+    alarmsRemindersHeader: "Medication Alarms & Voice Reminders",
+    alarmsRemindersDesc: "Configure exact times to receive real-time speech synthesized voice announcements.",
+    activeAlarms: "Active Alarms",
+    setupNewAlarm: "Setup New Alarm",
+    medicineNameLabel: "Medicine Name",
+    typeMedicinePlaceholder: "Type medicine (e.g. Lisinopril)",
+    quickPrefill: "Quick Prefill Prescribed:",
+    doseLabel: "Dose",
+    dosePlaceholder: "e.g. 1 tablet",
+    alarmTimeLabel: "Alarm Time",
+    scheduleVoiceAlarm: "Schedule Voice Alarm",
+    scheduledAlarms: "Scheduled Alarms",
+    clearAll: "Clear All",
+    noActiveAlarms: "No active medication alarms set.",
+    scheduleFormInstruction: "Use the form on the left to schedule your voice reminders.",
+    cancelBtn: "Cancel",
+    saveBtn: "Save",
+    testVoiceBtn: "Test Voice",
+    diagnosedOn: "Diagnosed on",
+    bloodGroupLabel: "Blood Group",
+    age: "Age",
+    searchPrescribedPlaceholder: "Search prescribed medications...",
+    listViewBtn: "List View",
+    calendarViewBtn: "Calendar View",
+    morningHeader: "Morning",
+    afternoonHeader: "Afternoon",
+    nightHeader: "Night",
+    noMedsScheduled: "No meds scheduled",
+    dayAdherenceLog: "Day adherence log",
+    noDoses: "No scheduled doses",
+    dosesTaken: "doses taken",
+    refReferenceRange: "Reference Range",
+    valDetected: "VALUE DETECTED",
+    aiCheckerHeader: "AI Cross-Checker",
+    aiCheckerDesc: "Enter two medications to test for clinical compatibility (e.g. 'Amoxicillin' & 'Methotrexate').",
+    crossInteractionScan: "Run Cross-Interaction Scan",
+    precautionLabel: "PRECAUTION",
+    sideEffectsLabel: "SIDE EFFECTS",
+    adherenceTips: "Adherence tips",
+    pwaAlertsEnabled: "PWA Push Notification Alerts Enabled",
+    localAlarmsDesc: "The system triggers local medicine alarms even when offline. Press the test simulator to test alarms.",
+    testAlarmBtn: "Test Alarm Scheduler Simulation",
+    remindersLabel: "Reminders",
+    historyLabel: "History",
+    fontSizeLabel: "FONT SIZE:"
   },
   te: {
     extractedPrescriptionResult: "మీ ప్రిస్క్రిప్షన్ యొక్క వివరాలు",
@@ -161,7 +207,54 @@ const LABELS: Record<string, Record<string, string>> = {
     warningsTab: "హెచ్చరికలు",
     recommendationsTab: "సిఫార్సులు",
     adherenceMetricsTab: "అడ్హెరెన్స్ & సూచికలు",
-    translating: "క్లినికల్ లాగ్ అనువదించబడుతోంది..."
+    translating: "క్లినికల్ లాగ్ అనువదించబడుతోంది...",
+    
+    // Additional Alarms & Schedulers
+    alarmsRemindersHeader: "మందుల అలారాలు & వాయిస్ రిమైండర్లు",
+    alarmsRemindersDesc: "నిజ సమయ స్పీచ్ సింథసైజ్డ్ వాయిస్ ప్రకటనలను పొందడానికి ఖచ్చితమైన సమయాలను కాన్ఫిగర్ చేయండి.",
+    activeAlarms: "యాక్టివ్ అలారాలు",
+    setupNewAlarm: "కొత్త అలారం సెటప్ చేయండి",
+    medicineNameLabel: "మందు పేరు",
+    typeMedicinePlaceholder: "మందు టైప్ చేయండి (ఉదా. లిసినోప్రిల్)",
+    quickPrefill: "త్వరగా నింపడానికి ఎంచుకోండి:",
+    doseLabel: "మోతాదు",
+    dosePlaceholder: "ఉదా. 1 మాత్ర",
+    alarmTimeLabel: "అలారం సమయం",
+    scheduleVoiceAlarm: "వాయిస్ అలారం షెడ్యూల్ చేయండి",
+    scheduledAlarms: "షెడ్యూల్ చేయబడిన అలారాలు",
+    clearAll: "అన్నీ క్లియర్ చేయి",
+    noActiveAlarms: "యాక్టివ్ మందుల అలారాలు ఏవీ సెట్ చేయలేదు.",
+    scheduleFormInstruction: "మీ వాయిస్ రిమైండర్లను షెడ్యూల్ చేయడానికి ఎడమ వైపున ఉన్న ఫారమ్‌ను ఉపయోగించండి.",
+    cancelBtn: "రద్దు చేయి",
+    saveBtn: "సేవ్ చేయి",
+    testVoiceBtn: "వాయిస్ పరీక్షించు",
+    diagnosedOn: "నిర్ధారణ తేదీ",
+    bloodGroupLabel: "రక్త గ్రూప్",
+    age: "వయస్సు",
+    searchPrescribedPlaceholder: "సూచించిన మందుల కోసం వెతకండి...",
+    listViewBtn: "జాబితా వీక్షణ",
+    calendarViewBtn: "క్యాలెండర్ వీక్షణ",
+    morningHeader: "ఉదయం",
+    afternoonHeader: "మధ్యాహ్నం",
+    nightHeader: "రాత్రి",
+    noMedsScheduled: "మందులు ఏవీ షెడ్యూల్ చేయలేదు",
+    dayAdherenceLog: "రోజు చికిత్స లాగ్",
+    noDoses: "మందులు ఏవీ షెడ్యూల్ చేయలేదు",
+    dosesTaken: "మోతాదులు తీసుకున్నారు",
+    refReferenceRange: "రిఫరెన్స్ పరిధి",
+    valDetected: "కనుగొనబడిన విలువ",
+    aiCheckerHeader: "AI మందుల పరస్పర చర్య క్రాస్-చెకర్",
+    aiCheckerDesc: "రెండూ మందుల అనుకూలతను పరీక్షించడానికి వాటి పేర్లు నమోదు చేయండి (ఉదా. 'Amoxicillin' & 'Methotrexate').",
+    crossInteractionScan: "పరస్పర చర్య స్కాన్ రన్ చేయి",
+    precautionLabel: "ముందు జాగ్రత్త",
+    sideEffectsLabel: "దుష్ప్రభావాలు",
+    adherenceTips: "చిట్కాలు మరియు సమ్మతి",
+    pwaAlertsEnabled: "PWA నోటిఫికేషన్‌లు ప్రారంభించబడ్డాయి",
+    localAlarmsDesc: "సిస్టమ్ ఆఫ్‌లైన్‌లో ఉన్నప్పుడు కూడా స్థానిక అలారాలను ప్రేరేపిస్తుంది. అలారాలను పరీక్షించడానికి టెస్ట్ బటన్ నొక్కండి.",
+    testAlarmBtn: "అలారం షెడ్యూలర్ అనుకరణను పరీక్షించండి",
+    remindersLabel: "రిమైండర్లు",
+    historyLabel: "చరిత్ర",
+    fontSizeLabel: "అక్షరాల సైజు:"
   },
   hi: {
     extractedPrescriptionResult: "आपका निकाला गया पर्चा परिणाम",
@@ -193,7 +286,7 @@ const LABELS: Record<string, Record<string, string>> = {
     averages: "औसत",
     target: "लक्ष्य",
     normal: "सामान्य",
-    readAudioSummary: "ऑдио सारांश सुनें",
+    readAudioSummary: "ऑडियो सारांश सुनें",
     stopVoiceSummary: "ऑडियो सारांश रोकें",
     notSpecified: "निर्दिष्ट नहीं",
     onceDaily: "दिन में एक बार",
@@ -206,7 +299,54 @@ const LABELS: Record<string, Record<string, string>> = {
     warningsTab: "सावधानियां",
     recommendationsTab: "सिफारिशें",
     adherenceMetricsTab: "अनुपालन और मेट्रिक्स",
-    translating: "दस्तावेज़ का अनुवाद किया जा रहा है..."
+    translating: "दस्तावेज़ का अनुवाद किया जा रहा है...",
+    
+    // Additional Alarms & Schedulers
+    alarmsRemindersHeader: "दवा अलार्म और वॉयस रिमाइंडर",
+    alarmsRemindersDesc: "रीयल-टाइम वॉयस सचेतक प्राप्त करने के लिए सटीक समय कॉन्फ़िगर करें।",
+    activeAlarms: "सक्रिय अलार्म",
+    setupNewAlarm: "नया अलार्म सेट करें",
+    medicineNameLabel: "दवा का नाम",
+    typeMedicinePlaceholder: "दवा का नाम लिखें (जैसे लिसिनोप्रिल)",
+    quickPrefill: "शीघ्र प्रीफिल करें:",
+    doseLabel: "खुराक",
+    dosePlaceholder: "जैसे 1 गोली",
+    alarmTimeLabel: "अलार्म समय",
+    scheduleVoiceAlarm: "वॉयस अलार्म शेड्यूल करें",
+    scheduledAlarms: "निर्धारित अलार्म",
+    clearAll: "सभी साफ़ करें",
+    noActiveAlarms: "कोई सक्रिय दवा अलार्म सेट नहीं है।",
+    scheduleFormInstruction: "वॉयस रिमाइंडर शेड्यूल करने के लिए बाईं ओर के फॉर्म का उपयोग करें।",
+    cancelBtn: "रद्द करें",
+    saveBtn: "सहेजें",
+    testVoiceBtn: "आवाज परीक्षण",
+    diagnosedOn: "निदान तिथि",
+    bloodGroupLabel: "रक्त समूह",
+    age: "आयु",
+    searchPrescribedPlaceholder: "निर्धारित दवाओं में खोजें...",
+    listViewBtn: "सूची दृश्य",
+    calendarViewBtn: "कैलेंडर दृश्य",
+    morningHeader: "सुबह",
+    afternoonHeader: "दोपहर",
+    nightHeader: "रात",
+    noMedsScheduled: "कोई दवा निर्धारित नहीं",
+    dayAdherenceLog: "दैनिक अनुपालन लॉग",
+    noDoses: "कोई निर्धारित खुराक नहीं",
+    dosesTaken: "खुराक ली गई",
+    refReferenceRange: "संदर्भ सीमा",
+    valDetected: "मूल्य पाया गया",
+    aiCheckerHeader: "AI दवा अंतःक्रिया क्रॉस-चेकर",
+    aiCheckerDesc: "दवा संगतता परीक्षण करने के लिए दो दवाएं दर्ज करें (जैसे 'अमोक्सिसिलिन' और 'मेथोट्रेक्सेट')।",
+    crossInteractionScan: "अंतःक्रिया स्कैन चलाएं",
+    precautionLabel: "सावधानी",
+    sideEffectsLabel: "दुष्प्रभाव",
+    adherenceTips: "अनुपालन और सुझाव",
+    pwaAlertsEnabled: "PWA अलर्ट सक्षम",
+    localAlarmsDesc: "सिस्टम ऑफ़लाइन होने पर भी अलार्म चालू करता है। सचेतकों का परीक्षण करने के लिए बटन दबाएं।",
+    testAlarmBtn: "अलार्म शेड्यूलर सिमुलेशन का परीक्षण करें",
+    remindersLabel: "अनुस्मारक",
+    historyLabel: "इतिहास",
+    fontSizeLabel: "अक्षर आकार:"
   }
 };
 
@@ -302,25 +442,32 @@ const StructuredMessage = ({ text, theme }: { text: string; theme: string }) => 
   );
 };
 
-export function AppContent(props: { 
-  isClerk: boolean; 
-  user?: any; 
-  isSignedIn?: boolean; 
-  signOut?: () => void; 
-  clerkSignIn?: any; 
-  clerkSignUp?: any; 
-  setSignInActive?: any; 
-  setSignUpActive?: any; 
-}) {
+export function AppContent() {
   // Theme controllers (default to premium dark mode)
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   
   // Translation/Language States
   const [selectedLanguage, setSelectedLanguage] = useState<"en" | "te" | "hi">("en");
   const [isTranslating, setIsTranslating] = useState<boolean>(false);
-  const [translatedCache, setTranslatedCache] = useState<Record<string, Record<string, any>>>(PRELOADED_TRANSLATIONS);
+  const [translatedCache, setTranslatedCache] = useState<Record<string, Record<string, any>>>(() => {
+    const defaultCache = { ...PRELOADED_TRANSLATIONS };
+    const saved = localStorage.getItem("medidecode_translated_cache");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return { ...defaultCache, ...parsed };
+      } catch (e) {
+        console.error("Error reading saved translations from localStorage", e);
+      }
+    }
+    return defaultCache;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("medidecode_translated_cache", JSON.stringify(translatedCache));
+  }, [translatedCache]);
+
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState<boolean>(false);
-  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState<boolean>(false);
   const translationFetchInProgress = useRef<Record<string, boolean>>({});
   
   // Clinical Session States
@@ -737,8 +884,6 @@ export function AppContent(props: {
   const [isSignUp, setIsSignUp] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
-  const [authName, setAuthName] = useState("");
-  const [authConfirmPassword, setAuthConfirmPassword] = useState("");
   const [guestUser, setGuestUser] = useState<string | null>("Emily Johnson (Guest Partner)");
   const [showMemberForm, setShowMemberForm] = useState(false);
   
@@ -1804,7 +1949,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
               </div>
-              <div className="text-left flex items-center">
+              <div className="flex items-center text-left">
                 <span className={`text-lg font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r group-hover:from-cyan-400 group-hover:to-blue-400 transition-all duration-300 ${
                   theme === "dark"
                     ? "from-cyan-400 via-blue-400 to-indigo-400"
@@ -1900,67 +2045,19 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
               </div>
 
               {/* GUEST MODE STATE INDICATOR / AUTH TRIGGERS */}
-              {((props.isClerk ? props.isSignedIn : (guestUser && guestUser.includes("(Verified User)"))) ? (
-                (() => {
-                  const nameStr = props.isClerk
-                    ? (props.user?.firstName || props.user?.username || props.user?.primaryEmailAddress?.emailAddress?.split('@')[0] || "User")
-                    : (guestUser ? guestUser.replace(" (Verified User)", "") : "User");
-                  const initialLetter = nameStr.charAt(0).toUpperCase();
-                  
-                  return (
-                    <div className="relative">
-                      {/* Avatar Button containing the starting letter */}
-                      <button
-                        onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                        className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-black transition-all duration-300 cursor-pointer shadow-md select-none border-2 hover:scale-105 active:scale-95 focus:outline-none ${
-                          theme === "dark"
-                            ? "bg-gradient-to-br from-cyan-500 to-blue-600 text-white border-cyan-500/50 shadow-cyan-500/15 hover:shadow-cyan-400/30"
-                            : "bg-gradient-to-br from-cyan-600 to-indigo-600 text-white border-white shadow-md hover:shadow-cyan-200"
-                        }`}
-                        title={`Logged in as ${nameStr}. Click to view details.`}
-                      >
-                        {initialLetter}
-                      </button>
-
-                      {isProfileDropdownOpen && (
-                        <>
-                          <div className="fixed inset-0 z-40" onClick={() => setIsProfileDropdownOpen(false)} />
-                          <div className={`absolute right-0 mt-2 w-52 rounded-xl border shadow-xl z-50 p-4 transform origin-top-right transition-all duration-200 ${
-                            theme === "dark" ? "bg-slate-950 border-slate-800 text-slate-200 shadow-black/80" : "bg-white border-slate-150 text-slate-700 shadow-slate-200/80"
-                          }`}>
-                            <div className="space-y-1 mb-3 pb-2.5 border-b border-sans border-dashed border-slate-850">
-                              <p className={`text-[10px] font-bold tracking-widest uppercase ${theme === "dark" ? "text-slate-500" : "text-slate-400"}`}>Active Profile</p>
-                              <p className="text-xs font-bold truncate max-w-full">{nameStr}</p>
-                              {props.isClerk && props.user?.primaryEmailAddress?.emailAddress && (
-                                <p className={`text-[10px] truncate max-w-full ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
-                                  {props.user.primaryEmailAddress.emailAddress}
-                                </p>
-                              )}
-                            </div>
-                            <button
-                              onClick={() => {
-                                setIsProfileDropdownOpen(false);
-                                if (props.isClerk && props.signOut) {
-                                  props.signOut();
-                                } else {
-                                  setGuestUser("Emily Johnson (Guest Partner)");
-                                }
-                              }}
-                              className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-black transition-all duration-300 cursor-pointer border ${
-                                theme === "dark"
-                                  ? "bg-slate-900 border-rose-500/30 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 hover:border-rose-400/50 shadow-rose-950/20"
-                                  : "bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-600 hover:text-rose-700"
-                              }`}
-                            >
-                              <LogOut className="w-3.5 h-3.5" />
-                              <span>Sign Out</span>
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  );
-                })()
+              {guestUser && guestUser.includes("(Verified User)") ? (
+                <button
+                  onClick={() => setGuestUser("Emily Johnson (Guest Partner)")}
+                  className={`flex items-center gap-1.5 px-4.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-300 cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-95 focus:outline-none border ${
+                    theme === "dark"
+                      ? "bg-slate-900/80 border-rose-500/30 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 hover:border-rose-400/50 shadow-rose-950/20"
+                      : "bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white border-transparent shadow-rose-100"
+                  }`}
+                  title="Click to Logout Sandbox Session"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span className="truncate max-w-[120px]">Sign Out ({guestUser.replace(" (Verified User)", "")})</span>
+                </button>
               ) : (
                 <button
                   onClick={() => { setIsSignUp(false); setAuthModal(true); }}
@@ -1973,7 +2070,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                   <User className="w-3.5 h-3.5" />
                   <span>Login</span>
                 </button>
-              ))}
+              )}
 
               {/* MOBILE HAMBURGER */}
               <button
@@ -2202,7 +2299,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                   className={`w-full py-3.5 px-6 rounded-2xl text-xs font-black tracking-widest uppercase flex items-center justify-center gap-2 border cursor-pointer hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-xl ${
                     uploadType === "prescription"
                       ? "bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-450 hover:to-blue-550 text-white border-cyan-400 shadow-cyan-500/15"
-                      : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-550 hover:to-pink-550 text-white border-purple-500 shadow-purple-600/15"
+                      : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-550 hover:to-pink-550 text-white border-purple-505 shadow-purple-600/15"
                   }`}
                 >
                   <Sparkles className="w-4 h-4 animate-spin text-cyan-300" />
@@ -2273,7 +2370,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                 </span>
               </div>
               <p className={`text-xs leading-relaxed mt-0.5 ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
-                {selectedLanguage === "te" ? "నిర్ధారణ తేదీ" : selectedLanguage === "hi" ? "निदान तिथि" : "Diagnosed on"} {activeDocData.patient.date} | {selectedLanguage === "te" ? "వయస్సు" : selectedLanguage === "hi" ? "आयु" : "Age"}: {activeDocData.patient.age} | {selectedLanguage === "te" ? "రక్త గ్రూప్" : selectedLanguage === "hi" ? "रक्त समूह" : "Blood Group"}: {activeDocData.patient.bloodGroup || "O+"}
+                {labels.diagnosedOn} {activeDocData.patient.date} | {labels.age}: {activeDocData.patient.age} | {labels.bloodGroupLabel}: {activeDocData.patient.bloodGroup || "O+"}
               </p>
             </div>
           </div>
@@ -2325,7 +2422,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                 }`}
               >
                 <Calendar className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Reminders</span>
+                <span>{labels.remindersLabel || "Reminders"}</span>
               </button>
             )}
 
@@ -2342,14 +2439,14 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
               }`}
             >
               <History className={`w-3.5 h-3.5 ${theme === "dark" ? "text-cyan-400" : "text-cyan-600"}`} />
-              <span>History</span>
+              <span>{labels.historyLabel || "History"}</span>
             </button>
 
 
 
             {/* Accessibility scale multipliers */}
             <div className="flex items-center gap-1 border border-slate-800/10 p-1 rounded-lg">
-              <span className="text-[10px] font-mono font-bold text-slate-400 px-1.5 uppercase">FONT SIZE:</span>
+              <span className="text-[10px] font-mono font-bold text-slate-400 px-1.5 uppercase">{labels.fontSizeLabel || "FONT SIZE:"}</span>
               <button onClick={() => setAccessTextSize("standard")} className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold text-xs ${accessTextSize === "standard" ? "bg-cyan-500 text-white" : ""}`}>1x</button>
               <button onClick={() => setAccessTextSize("large")} className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold text-xs ${accessTextSize === "large" ? "bg-cyan-500 text-white" : ""}`}>1.2x</button>
               <button onClick={() => setAccessTextSize("xlarge")} className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold text-xs ${accessTextSize === "xlarge" ? "bg-cyan-500 text-white" : ""}`}>1.3x</button>
@@ -2698,19 +2795,23 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                         </h4>
                         <div
                           id="prescription-quick-summary"
-                          className={`p-5 rounded-2xl border text-xs leading-relaxed ${
+                          className={`p-5 rounded-2xl border text-xs leading-relaxed transition-all duration-300 ${
                             theme === "dark" 
-                              ? "bg-cyan-950/20 border-cyan-850/40 text-cyan-200" 
-                              : "bg-cyan-50/80 border-cyan-200 text-slate-950 font-medium"
+                              ? "bg-gradient-to-r from-cyan-950/30 to-slate-900/40 border-cyan-500/20 dark:shadow-[0_0_15px_rgba(6,182,212,0.05)] text-cyan-200" 
+                              : "bg-gradient-to-r from-cyan-50/75 to-sky-50/50 border-cyan-200 text-slate-950 font-medium shadow-sm"
                           }`}
                         >
                           <p className={`mb-1.5 flex items-center gap-1.5 ${theme === "dark" ? "font-semibold text-cyan-400" : "font-extrabold text-cyan-800"}`}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-600 animate-pulse"></span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
                             {labels.decodedKeyTakeaway}:
                           </p>
                           <p>
-                            {activeDoc.id === "doc-1" && selectedLanguage === "en"
-                              ? "You have been prescribed active heart & cholesterol support medications (Rosuvastatin & Clopidogrel) along with supplements. These are standard protective remedies to keep your blood vessels clear and your metabolism healthy. Please take them once daily as written, and talk to your doctor if you experience any unusual muscle aches."
+                            {activeDoc.id === "doc-1"
+                              ? selectedLanguage === "te"
+                                ? "మీకు అనుబంధాలతో పాటు క్రియాశీల గుండె మరియు కొలెస్ట్రాల్ మద్దతు మందులు (రోసువాస్టాటిన్ మరియు క్లోపిడోగ్రెల్) సూచించబడ్డాయి. మీ రక్తనాళాలను శుభ్రంగా ఉంచడానికి మరియు మీ జీవక్రియను ఆరోగ్యంగా ఉంచడానికి ఇవి ప్రామాణిక రక్షణ నివారణలు. దయచేసి వాటిని రాసినట్లుగా రోజుకు ఒకసారి తీసుకోండి మరియు మీకు ఏవైనా అసాధారణమైన కండరాల నొప్పులు అనిపిస్తే మీ వైద్యుడితో మాట్లాడండి."
+                                : selectedLanguage === "hi"
+                                  ? "आपको सप्लीमेंट्स के साथ सक्रिय हृदय और कोलेस्ट्रॉल सहायता दवाएं (रोसुवास्टेटिन और क्लोपिडोग्रेल) निर्धारित की गई हैं। आपकी रक्त वाहिकाओं को साफ रखने और आपके चयापचय को स्वस्थ रखने के लिए ये मानक सुरक्षात्मक उपाय हैं। कृपया उन्हें लिखे अनुसार दिन में एक बार लें, और यदि आपको कोई असामान्य मांसपेशियों में दर्द महसूस हो तो अपने डॉक्टर से बात करें।"
+                                  : "You have been prescribed active heart & cholesterol support medications (Rosuvastatin & Clopidogrel) along with supplements. These are standard protective remedies to keep your blood vessels clear and your metabolism healthy. Please take them once daily as written, and talk to your doctor if you experience any unusual muscle aches."
                               : activeDocData.summary}
                           </p>
                         </div>
@@ -2723,15 +2824,19 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                         </h4>
                         <div
                           id="prescription-additional-notes"
-                          className={`p-5 rounded-2xl border text-xs leading-relaxed ${
+                          className={`p-5 rounded-2xl border text-xs leading-relaxed transition-all duration-300 ${
                             theme === "dark" 
-                              ? "bg-slate-950/60 border-slate-850 text-slate-350" 
-                              : "bg-slate-100/60 border-slate-200 text-slate-950 font-medium"
+                              ? "bg-slate-950/40 border-slate-800/80 text-slate-300" 
+                              : "bg-slate-50/80 border-slate-200 text-slate-700 shadow-sm"
                           }`}
                         >
                           <p>
-                            {activeDoc.id === "doc-1" && selectedLanguage === "en"
-                              ? "The prescription also contains dates 29/11/26 and 27/10/2026, which might be related to follow-up or previous prescriptions. There are also circled numbers '5' and '35' which are unclear in their context."
+                            {activeDoc.id === "doc-1"
+                              ? selectedLanguage === "te"
+                                ? "ఈ ప్రిస్క్రిప్షన్‌లో 29/11/26 మరియు 27/10/2026 తేదీలు కూడా ఉన్నాయి, ఇవి తదుపరి అపాయింట్‌మెంట్ లేదా మునుపటి ప్రిస్క్రిప్షన్‌లకు సంబంధించినవి కావచ్చు. సర్కిల్ చేయబడిన '5' మరియు '35' సంఖ్యలు కూడా ఉన్నాయి, వాటి సందర్భం ప్రస్తుతం స్పష్టంగా లేదు."
+                                : selectedLanguage === "hi"
+                                  ? "नुस्खे (प्रिस्क्रिप्शन) में 29/11/26 और 27/10/2026 तारीखें भी शामिल हैं, जो अनुवर्ती (फॉलो-अप) या पिछले नुस्खे से संबंधित हो सकती हैं। इसमें घेरे गए नंबर '5' and '35' भी हैं जिनका संदर्भ स्पष्ट नहीं है।"
+                                  : "The prescription also contains dates 29/11/26 and 27/10/2026, which might be related to follow-up or previous prescriptions. There are also circled numbers '5' and '35' which are unclear in their context."
                               : (activeDocData.summary || "Take your medications precisely as written.")}
                           </p>
                         </div>
@@ -2943,19 +3048,19 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                       <div className="space-y-2">
                         <div className="flex items-center gap-1.5 text-cyan-400 font-bold text-xs uppercase tracking-wider font-mono">
                           <Volume2 className="w-4 h-4 animate-bounce" />
-                          <span>Adherence tips</span>
+                          <span>{labels.adherenceTips}</span>
                         </div>
-                        <h5 className="font-bold text-xs">PWA Push Notification Alerts Enabled</h5>
+                        <h5 className="font-bold text-xs">{labels.pwaAlertsEnabled}</h5>
                         <p className={`text-[11px] leading-relaxed ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
-                          The system triggers local medicine alarms even when offline. Press the test simulator to test alarms.
+                          {labels.localAlarmsDesc}
                         </p>
                       </div>
 
                       <button
                         onClick={triggerRemindersNotification}
-                        className="py-2.5 px-3 rounded-lg text-[10px] uppercase font-bold tracking-wider text-center cursor-pointer bg-gradient-to-tr from-cyan-500 to-indigo-600 text-white hover:from-cyan-400 hover:to-indigo-500 transition-colors"
+                        className="py-2.5 px-3 rounded-lg text-[10px] uppercase font-bold tracking-wider text-center cursor-pointer bg-gradient-to-tr from-cyan-500 to-indigo-600 text-white hover:from-cyan-400 hover:to-indigo-550 transition-colors"
                       >
-                        🔔 Test Alarm Scheduler Simulation
+                        🔔 {labels.testAlarmBtn}
                       </button>
                     </div>
                   </div>
@@ -2974,7 +3079,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                       <Search className="w-4 h-4 text-slate-400 shrink-0" />
                       <input
                         type="text"
-                        placeholder="Search prescribed medications..."
+                        placeholder={labels.searchPrescribedPlaceholder || "Search prescribed medications..."}
                         value={medSearchQuery}
                         onChange={(e) => setMedSearchQuery(e.target.value)}
                         className="bg-transparent border-none focus:outline-none text-xs w-full placeholder-slate-500"
@@ -2992,7 +3097,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                         }`}
                       >
                         <FileText className="w-3.5 h-3.5" />
-                        <span>List View</span>
+                        <span>{labels.listViewBtn || "List View"}</span>
                       </button>
                       <button
                         id="medicines-tab"
@@ -3004,7 +3109,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                         }`}
                       >
                         <Calendar className="w-3.5 h-3.5" />
-                        <span>Calendar View</span>
+                        <span>{labels.calendarViewBtn || "Calendar View"}</span>
                       </button>
                     </div>
                   </div>
@@ -3166,16 +3271,16 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                 <span className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400">
                                   <Clock className="w-4 h-4 animate-pulse text-cyan-400" />
                                 </span>
-                                <h3 className="font-extrabold text-sm tracking-tight text-cyan-400">Medication Alarms & Voice Reminders</h3>
+                                <h3 className="font-extrabold text-sm tracking-tight text-cyan-400">{labels.alarmsRemindersHeader}</h3>
                               </div>
                               <p className="text-[11px] text-slate-500 mt-1">
-                                Configure exact times to receive real-time speech synthesized voice announcements.
+                                {labels.alarmsRemindersDesc}
                               </p>
                             </div>
                             
                             {/* Active count badge */}
                             <span className="px-3 py-1 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-bold uppercase tracking-wider h-fit w-fit font-mono">
-                              {customReminders.filter(r => r.active).length} Active Alarms
+                              {customReminders.filter(r => r.active).length} {labels.activeAlarms}
                             </span>
                           </div>
 
@@ -3183,15 +3288,15 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                             
                             {/* Form (5 cols) */}
                             <div className="lg:col-span-12 xl:col-span-5 space-y-4">
-                              <h4 className="text-[10px] uppercase font-bold tracking-wider font-mono text-slate-400">Setup New Alarm</h4>
+                              <h4 className="text-[10px] uppercase font-bold tracking-wider font-mono text-slate-400">{labels.setupNewAlarm}</h4>
                               
                               <div className="space-y-4">
                                 {/* Medicine name */}
                                 <div className="space-y-1.5">
-                                  <label className="text-[10px] font-semibold text-slate-400 block font-mono">Medicine Name</label>
+                                  <label className="text-[10px] font-semibold text-slate-400 block font-mono">{labels.medicineNameLabel}</label>
                                   <input
                                     type="text"
-                                    placeholder="Type medicine (e.g. Lisinopril)"
+                                    placeholder={labels.typeMedicinePlaceholder}
                                     value={newAlarmMed}
                                     onChange={(e) => setNewAlarmMed(e.target.value)}
                                     className={`w-full p-2.5 rounded-xl text-xs border bg-transparent focus:outline-none focus:ring-1 focus:ring-cyan-500 transition-all ${
@@ -3202,7 +3307,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                   
                                   {/* Quick pill selector from decoded medicines */}
                                   <div className="space-y-1">
-                                    <span className="text-[9px] text-slate-500 block">Quick Prefill Prescribed:</span>
+                                    <span className="text-[9px] text-slate-500 block">{labels.quickPrefill}</span>
                                     <div className="flex flex-wrap gap-1.5 max-h-[70px] overflow-y-auto pr-1">
                                       {activeDocData.medicines?.map((m: any, idx: number) => (
                                         <button
@@ -3232,10 +3337,10 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                 {/* Dose & Time */}
                                 <div className="grid grid-cols-2 gap-3">
                                   <div className="space-y-1.5">
-                                    <label className="text-[10px] font-semibold text-slate-400 block font-mono">Dose</label>
+                                    <label className="text-[10px] font-semibold text-slate-400 block font-mono">{labels.doseLabel}</label>
                                     <input
                                       type="text"
-                                      placeholder="e.g. 1 tablet"
+                                      placeholder={labels.dosePlaceholder}
                                       value={newAlarmDose}
                                       onChange={(e) => setNewAlarmDose(e.target.value)}
                                       className={`w-full p-2.5 rounded-xl text-xs border bg-transparent focus:outline-none focus:ring-1 focus:ring-cyan-500 transition-all ${
@@ -3246,7 +3351,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                   </div>
 
                                   <div className="space-y-1.5">
-                                    <label className="text-[10px] font-semibold text-slate-400 block font-mono">Alarm Time</label>
+                                    <label className="text-[10px] font-semibold text-slate-400 block font-mono">{labels.alarmTimeLabel}</label>
                                     <input
                                       type="time"
                                       value={newAlarmTime}
@@ -3287,7 +3392,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                   className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-center cursor-pointer bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/15 font-sans"
                                 >
                                   <Plus className="w-4 h-4" />
-                                  <span>Schedule Voice Alarm</span>
+                                  <span>{labels.scheduleVoiceAlarm}</span>
                                 </button>
                               </div>
                             </div>
@@ -3295,7 +3400,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                             {/* List (7 cols) */}
                             <div className="lg:col-span-12 xl:col-span-7 space-y-4">
                               <div className="flex items-center justify-between">
-                                <h4 className="text-[10px] uppercase font-bold tracking-wider font-mono text-slate-400">Scheduled Alarms</h4>
+                                <h4 className="text-[10px] uppercase font-bold tracking-wider font-mono text-slate-400">{labels.scheduledAlarms}</h4>
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -3305,7 +3410,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                   }}
                                   className="text-[9px] font-bold text-rose-400 uppercase tracking-widest font-mono hover:underline cursor-pointer"
                                 >
-                                  Clear All
+                                  {labels.clearAll}
                                 </button>
                               </div>
 
@@ -3313,8 +3418,8 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                 {customReminders.length === 0 ? (
                                   <div className="text-center py-10 border border-dashed rounded-xl border-slate-800/20 text-slate-500">
                                     <Bell className="w-6 h-6 mx-auto mb-2 text-slate-500 stroke-[1.5]" />
-                                    <p className="text-xs">No active medication alarms set.</p>
-                                    <p className="text-[10px] text-slate-605 mt-0.5">Use the form on the left to schedule your voice reminders.</p>
+                                    <p className="text-xs">{labels.noActiveAlarms}</p>
+                                    <p className="text-[10px] text-slate-605 mt-0.5">{labels.scheduleFormInstruction}</p>
                                   </div>
                                 ) : (
                                   customReminders.map((reminder) => {
@@ -3330,7 +3435,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                             {/* Edit Med Name */}
                                             <div className="space-y-1">
-                                              <label className="text-[9px] font-semibold text-slate-455 block font-mono">Medicine Name</label>
+                                              <label className="text-[9px] font-semibold text-slate-455 block font-mono">{labels.medicineNameLabel}</label>
                                               <input
                                                 type="text"
                                                 value={editingReminderMed}
@@ -3342,7 +3447,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                             </div>
                                             {/* Edit Dosage */}
                                             <div className="space-y-1">
-                                              <label className="text-[9px] font-semibold text-slate-455 block font-mono">Dosage</label>
+                                              <label className="text-[9px] font-semibold text-slate-455 block font-mono">{labels.doseLabel}</label>
                                               <input
                                                 type="text"
                                                 value={editingReminderDose}
@@ -3354,7 +3459,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                             </div>
                                             {/* Edit Time */}
                                             <div className="space-y-1">
-                                              <label className="text-[9px] font-semibold text-slate-455 block font-mono">Alarm Time</label>
+                                              <label className="text-[9px] font-semibold text-slate-455 block font-mono">{labels.alarmTimeLabel}</label>
                                               <input
                                                 type="time"
                                                 value={editingReminderTime}
@@ -3372,14 +3477,14 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                               onClick={() => setEditingReminderId(null)}
                                               className="px-3 py-1 rounded-lg border border-slate-600 text-[10px] font-bold text-slate-400 hover:text-slate-200 cursor-pointer"
                                             >
-                                              Cancel
+                                              {labels.cancelBtn}
                                             </button>
                                             <button
                                               type="button"
                                               onClick={handleSaveReminder}
                                               className="px-3 py-1 rounded-lg bg-cyan-500 text-[10px] font-bold text-slate-950 hover:bg-cyan-400 cursor-pointer"
                                             >
-                                              Save
+                                              {labels.saveBtn}
                                             </button>
                                           </div>
                                         </div>
@@ -3429,7 +3534,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                             className="p-1 px-2.5 rounded-lg border text-[9px] font-mono font-bold flex items-center gap-1 cursor-pointer bg-purple-500/10 border-purple-500/30 text-purple-400 hover:bg-purple-500/20 transition-all"
                                           >
                                             <Volume2 className="w-3 h-3" />
-                                            <span>Test Voice</span>
+                                            <span>{labels.testVoiceBtn}</span>
                                           </button>
 
                                           {/* On/Off Switch */}
@@ -3510,14 +3615,14 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                           })}
                         </div>
 
-                        {/* Schedule Summary Checklist progress */}
+                             {/* Schedule Summary Checklist progress */}
                         <div className={`p-4 rounded-xl border flex items-center justify-between gap-4 text-xs font-mono mb-4 ${
                           theme === "dark" ? "bg-slate-950/60 border-slate-800/80" : "bg-slate-50 border-slate-200 shadow-sm"
                         }`}>
                           <div className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-emerald-400" />
+                             <CheckCircle className="w-4 h-4 text-emerald-400" />
                             <span className={theme === "light" ? "text-slate-700 font-semibold" : "text-slate-300"}>
-                              {activeCalendarDay} Day adherence log
+                              {activeCalendarDay} {labels.dayAdherenceLog}
                             </span>
                           </div>
                           <div className="font-extrabold text-cyan-400 font-sans text-[11px] sm:text-xs">
@@ -3540,7 +3645,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                   if (completedCalendarDoses[`${activeCalendarDay}-${m.name}-night`]) completed++;
                                 }
                               });
-                              return totalDoses > 0 ? `${completed}/${totalDoses} doses taken (${Math.round((completed/totalDoses) * 100)}%)` : "No scheduled doses";
+                              return totalDoses > 0 ? `${completed}/${totalDoses} ${labels.dosesTaken} (${Math.round((completed/totalDoses) * 100)}%)` : labels.noDoses;
                             })()}
                           </div>
                         </div>
@@ -3557,7 +3662,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                 <Sun className="w-4 h-4" />
                               </span>
                               <div>
-                                <h4 className="font-extrabold text-xs text-amber-500 uppercase tracking-wide">Morning</h4>
+                                <h4 className="font-extrabold text-xs text-amber-500 uppercase tracking-wide">{labels.morningHeader}</h4>
                                 <p className="text-[9px] text-slate-500 font-mono">06:00 AM - 12:00 PM</p>
                               </div>
                             </div>
@@ -3570,7 +3675,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                 }) || [];
                                 
                                 if (morningMeds.length === 0) {
-                                  return <p className="text-[10px] text-slate-500 italic p-2 text-center">No meds scheduled</p>;
+                                  return <p className="text-[10px] text-slate-500 italic p-2 text-center">{labels.noMedsScheduled}</p>;
                                 }
                                 
                                 return morningMeds.map((med: any, i: number) => {
@@ -3597,7 +3702,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                       </div>
                                       <div className="space-y-1">
                                         <h5 className={`font-bold text-xs ${isTaken ? "text-slate-500 flex-1" : "text-cyan-400"}`}>{med.name}</h5>
-                                        <p className="text-[10px] text-slate-400 font-medium">Dosage: {med.dosage}</p>
+                                        <p className="text-[10px] text-slate-400 font-medium">{labels.doseLabel}: {med.dosage}</p>
                                         <p className="text-[9px] text-slate-500 leading-relaxed">{med.purpose}</p>
                                       </div>
                                     </div>
@@ -3616,7 +3721,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                 <Activity className="w-4 h-4" />
                               </span>
                               <div>
-                                <h4 className="font-extrabold text-xs text-orange-500 uppercase tracking-wide">Afternoon</h4>
+                                <h4 className="font-extrabold text-xs text-orange-500 uppercase tracking-wide">{labels.afternoonHeader}</h4>
                                 <p className="text-[9px] text-slate-500 font-mono">12:00 PM - 05:00 PM</p>
                               </div>
                             </div>
@@ -3629,7 +3734,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                 }) || [];
                                 
                                 if (afternoonMeds.length === 0) {
-                                  return <p className="text-[10px] text-slate-500 italic p-2 text-center">No meds scheduled</p>;
+                                  return <p className="text-[10px] text-slate-500 italic p-2 text-center">{labels.noMedsScheduled}</p>;
                                 }
                                 
                                 return afternoonMeds.map((med: any, i: number) => {
@@ -3656,7 +3761,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                       </div>
                                       <div className="space-y-1">
                                         <h5 className={`font-bold text-xs ${isTaken ? "text-slate-500 flex-1" : "text-cyan-400"}`}>{med.name}</h5>
-                                        <p className="text-[10px] text-slate-400 font-medium">Dosage: {med.dosage}</p>
+                                        <p className="text-[10px] text-slate-400 font-medium">{labels.doseLabel}: {med.dosage}</p>
                                         <p className="text-[9px] text-slate-500 leading-relaxed">{med.purpose}</p>
                                       </div>
                                     </div>
@@ -3675,7 +3780,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                 <Moon className="w-4 h-4" />
                               </span>
                               <div>
-                                <h4 className="font-extrabold text-xs text-indigo-400 uppercase tracking-wide">Night</h4>
+                                <h4 className="font-extrabold text-xs text-indigo-400 uppercase tracking-wide">{labels.nightHeader}</h4>
                                 <p className="text-[9px] text-slate-500 font-mono">05:00 PM - 12:00 AM</p>
                               </div>
                             </div>
@@ -3688,7 +3793,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                 }) || [];
                                 
                                 if (nightMeds.length === 0) {
-                                  return <p className="text-[10px] text-slate-500 italic p-2 text-center">No meds scheduled</p>;
+                                  return <p className="text-[10px] text-slate-500 italic p-2 text-center">{labels.noMedsScheduled}</p>;
                                 }
                                 
                                 return nightMeds.map((med: any, i: number) => {
@@ -3715,7 +3820,125 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                       </div>
                                       <div className="space-y-1">
                                         <h5 className={`font-bold text-xs ${isTaken ? "text-slate-500 flex-1" : "text-cyan-400"}`}>{med.name}</h5>
-                                        <p className="text-[10px] text-slate-400 font-medium">Dosage: {med.dosage}</p>
+                                        <p className="text-[10px] text-slate-400 font-medium">{labels.doseLabel}: {med.dosage}</p>
+                                        <p className="text-[9px] text-slate-500 leading-relaxed">{med.purpose}</p>
+                                      </div>
+                                    </div>
+                                  );
+                                });
+                              })()}
+                            </div>
+                          </div>
+
+                          {/* 2. AFTERNOON SLOT */}
+                          <div className={`rounded-xl border p-4 transition-all ${
+                            theme === "dark" ? "bg-slate-900/10 border-orange-500/15" : "bg-white border-orange-200 shadow-sm"
+                          }`}>
+                            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-800/10">
+                              <span className="p-1.5 rounded-lg bg-orange-500/15 text-orange-500">
+                                <Activity className="w-4 h-4" />
+                              </span>
+                              <div>
+                                <h4 className="font-extrabold text-xs text-orange-500 uppercase tracking-wide">{labels.afternoonHeader}</h4>
+                                <p className="text-[9px] text-slate-500 font-mono">12:00 PM - 05:00 PM</p>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-3">
+                              {(() => {
+                                const afternoonMeds = combinedMedicines?.filter((m: any) => {
+                                  if (!m.name.toLowerCase().includes(medSearchQuery.toLowerCase())) return false;
+                                  return getMedSlots(m).afternoon;
+                                }) || [];
+                                
+                                if (afternoonMeds.length === 0) {
+                                  return <p className="text-[10px] text-slate-500 italic p-2 text-center">{labels.noMedsScheduled}</p>;
+                                }
+                                
+                                return afternoonMeds.map((med: any, i: number) => {
+                                  const doseId = `${activeCalendarDay}-${med.name}-afternoon`;
+                                  const isTaken = !!completedCalendarDoses[doseId];
+                                  return (
+                                    <div 
+                                      key={i}
+                                      onClick={() => {
+                                        setCompletedCalendarDoses(prev => ({ ...prev, [doseId]: !isTaken }));
+                                      }}
+                                      className={`p-3 rounded-lg border transition-all cursor-pointer flex items-start gap-2.5 ${
+                                        isTaken 
+                                          ? "bg-emerald-500/5 border-emerald-500/30 text-slate-400 line-through" 
+                                          : theme === "dark" 
+                                            ? "bg-slate-950/60 border-slate-800 hover:bg-slate-900" 
+                                            : "bg-slate-50 border-slate-200 hover:bg-slate-100"
+                                      }`}
+                                    >
+                                      <div className={`w-4 h-4 mt-0.5 rounded border flex items-center justify-center transition-colors shrink-0 ${
+                                        isTaken ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-600"
+                                      }`}>
+                                        {isTaken && <Check className="w-3 h-3 stroke-[3px]" />}
+                                      </div>
+                                      <div className="space-y-1">
+                                        <h5 className={`font-bold text-xs ${isTaken ? "text-slate-500 flex-1" : "text-cyan-400"}`}>{med.name}</h5>
+                                        <p className="text-[10px] text-slate-400 font-medium">{labels.doseLabel}: {med.dosage}</p>
+                                        <p className="text-[9px] text-slate-500 leading-relaxed">{med.purpose}</p>
+                                      </div>
+                                    </div>
+                                  );
+                                });
+                              })()}
+                            </div>
+                          </div>
+
+                          {/* 3. NIGHT SLOT */}
+                          <div className={`rounded-xl border p-4 transition-all ${
+                            theme === "dark" ? "bg-slate-900/10 border-indigo-500/15" : "bg-white border-indigo-200 shadow-sm"
+                          }`}>
+                            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-800/10">
+                              <span className="p-1.5 rounded-lg bg-indigo-500/15 text-indigo-400">
+                                <Moon className="w-4 h-4" />
+                              </span>
+                              <div>
+                                <h4 className="font-extrabold text-xs text-indigo-400 uppercase tracking-wide">{labels.nightHeader}</h4>
+                                <p className="text-[9px] text-slate-500 font-mono">05:00 PM - 12:00 AM</p>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-3">
+                              {(() => {
+                                const nightMeds = combinedMedicines?.filter((m: any) => {
+                                  if (!m.name.toLowerCase().includes(medSearchQuery.toLowerCase())) return false;
+                                  return getMedSlots(m).night;
+                                }) || [];
+                                
+                                if (nightMeds.length === 0) {
+                                  return <p className="text-[10px] text-slate-500 italic p-2 text-center">{labels.noMedsScheduled}</p>;
+                                }
+                                
+                                return nightMeds.map((med: any, i: number) => {
+                                  const doseId = `${activeCalendarDay}-${med.name}-night`;
+                                  const isTaken = !!completedCalendarDoses[doseId];
+                                  return (
+                                    <div 
+                                      key={i}
+                                      onClick={() => {
+                                        setCompletedCalendarDoses(prev => ({ ...prev, [doseId]: !isTaken }));
+                                      }}
+                                      className={`p-3 rounded-lg border transition-all cursor-pointer flex items-start gap-2.5 ${
+                                        isTaken 
+                                          ? "bg-emerald-500/5 border-emerald-500/30 text-slate-400 line-through" 
+                                          : theme === "dark" 
+                                            ? "bg-slate-950/60 border-slate-800 hover:bg-slate-900" 
+                                            : "bg-slate-50 border-slate-200 hover:bg-slate-100"
+                                      }`}
+                                    >
+                                      <div className={`w-4 h-4 mt-0.5 rounded border flex items-center justify-center transition-colors shrink-0 ${
+                                        isTaken ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-600"
+                                      }`}>
+                                        {isTaken && <Check className="w-3 h-3 stroke-[3px]" />}
+                                      </div>
+                                      <div className="space-y-1">
+                                        <h5 className={`font-bold text-xs ${isTaken ? "text-slate-500 flex-1" : "text-cyan-400"}`}>{med.name}</h5>
+                                        <p className="text-[10px] text-slate-400 font-medium">{labels.doseLabel}: {med.dosage}</p>
                                         <p className="text-[9px] text-slate-500 leading-relaxed">{med.purpose}</p>
                                       </div>
                                     </div>
@@ -3896,10 +4119,6 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                 </div>
               )}
 
-
-
-
-
             </div>
 
           </div>
@@ -3912,8 +4131,6 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
       <section id="timeline" className="py-16 max-w-7xl mx-auto px-4 sm:px-6">
         <HealthTimeline metrics={timelineMetrics} theme={theme} onChangeMetrics={setTimelineMetrics} />
       </section>
-
-
 
       {/* FAQ AND GLASSMORPH CONTACT (IMPORTED FROM MODULATED COMPONENT) */}
       <section id="faq" className="border-t border-slate-750/10">
@@ -3980,11 +4197,11 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               className={`relative z-10 w-full max-w-[440px] rounded-2xl border text-left shadow-2xl overflow-hidden flex flex-col ${
-                theme === "dark" ? "bg-[#0f1420] border-slate-800 text-white" : "bg-white border-slate-200 text-slate-800"
+                theme === "dark" ? "bg-[#0f1420] border-slate-800 text-white" : "bg-white border-slate-200 text-slate-850"
               }`}
             >
               {/* Tabs header at the top */}
-              <div className="flex border-b border-slate-800/80 rounded-t-2xl overflow-hidden">
+              <div className="flex border-b border-slate-805 rounded-t-2xl overflow-hidden">
                 <button
                   onClick={() => setIsSignUp(false)}
                   className={`flex-1 py-4 text-center text-sm font-semibold transition-all duration-200 outline-none cursor-pointer border-b-2 ${
@@ -4010,70 +4227,37 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
               {/* Form Content */}
               <div className="p-8 space-y-6">
                 
-                {/* Name field (Sign Up mode only) */}
-                {isSignUp && (
-                  <div className="flex flex-col gap-1.5 text-left">
-                    <label className="text-slate-300 text-[13px] font-medium">Full Name</label>
-                    <input
-                      type="text"
-                      placeholder="Jane Doe"
-                      value={authName}
-                      onChange={(e) => setAuthName(e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-[#0c1017] border border-slate-800/80 text-white focus:outline-none focus:border-[#009fff] focus:ring-1 focus:ring-[#009fff] transition-colors placeholder-slate-600 text-sm"
-                    />
-                  </div>
-                )}
-
                 {/* Email Address */}
                 <div className="flex flex-col gap-1.5 text-left">
-                  <label className="text-slate-300 text-[13px] font-medium">Email Address</label>
+                  <label className="text-slate-400 text-[13px] font-medium">Email Address</label>
                   <input
                     type="email"
                     placeholder="agent@example.com"
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg bg-[#0c1017] border border-slate-800/80 text-white focus:outline-none focus:border-[#009fff] focus:ring-1 focus:ring-[#009fff] transition-colors placeholder-slate-600 text-sm"
+                    className="w-full px-4 py-3 rounded-lg bg-[#0c1017] border border-slate-800 text-white focus:outline-none focus:border-[#009fff] focus:ring-1 focus:ring-[#009fff] transition-colors placeholder-slate-600 text-sm"
                   />
                 </div>
 
                 {/* Password */}
                 <div className="flex flex-col gap-1.5 text-left">
-                  <label className="text-slate-300 text-[13px] font-medium">Password</label>
+                  <label className="text-slate-400 text-[13px] font-medium">Password</label>
                   <input
                     type="password"
                     placeholder="••••••••"
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg bg-[#0c1017] border border-slate-800/80 text-white focus:outline-none focus:border-[#009fff] focus:ring-1 focus:ring-[#009fff] transition-colors placeholder-slate-600 text-sm"
+                    className="w-full px-4 py-3 rounded-lg bg-[#0c1017] border border-slate-800 text-white focus:outline-none focus:border-[#009fff] focus:ring-1 focus:ring-[#009fff] transition-colors placeholder-slate-600 text-sm"
                   />
                 </div>
-
-                {/* Confirm Password field (Sign Up mode only) */}
-                {isSignUp && (
-                  <div className="flex flex-col gap-1.5 text-left">
-                    <label className="text-slate-300 text-[13px] font-medium">Confirm Password</label>
-                    <input
-                      type="password"
-                      placeholder="••••••••"
-                      value={authConfirmPassword}
-                      onChange={(e) => setAuthConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-[#0c1017] border border-slate-800/80 text-white focus:outline-none focus:border-[#009fff] focus:ring-1 focus:ring-[#009fff] transition-colors placeholder-slate-600 text-sm"
-                    />
-                  </div>
-                )}
-
-                {/* Clerk Captcha element for bot protection in custom sign-up flow */}
-                {props.isClerk && isSignUp && (
-                  <div id="clerk-captcha" className="mt-2 flex justify-center text-xs text-slate-400" />
-                )}
 
                 {/* Remember Me / Forgot Password */}
                 {!isSignUp && (
                   <div className="flex items-center justify-between text-xs my-1">
-                    <label className="flex items-center gap-2 text-slate-450 hover:text-slate-350 cursor-pointer select-none text-[13px] text-slate-400">
+                    <label className="flex items-center gap-2 text-slate-400 hover:text-slate-300 cursor-pointer select-none text-[13px]">
                       <input 
                         type="checkbox" 
-                        className="rounded border-slate-850 bg-[#0c1017] text-[#009fff] focus:ring-0 w-4 h-4 accent-[#009fff]" 
+                        className="rounded border-slate-800 bg-[#0c1017] text-[#009fff] focus:ring-0 w-4 h-4 accent-[#009fff]" 
                       />
                       <span>Remember me</span>
                     </label>
@@ -4089,86 +4273,15 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                 {/* Submit button */}
                 <button 
                   onClick={async () => {
-                    if (isSignUp && !authName) {
-                      alert("Please enter your name.");
-                      return;
-                    }
                     if (!authEmail || !authPassword) {
                       alert("Please enter both your email address and password.");
                       return;
                     }
-                    if (isSignUp && authPassword !== authConfirmPassword) {
-                      alert("Passwords do not match!");
-                      return;
-                    }
-                    if (props.isClerk) {
-                      if (isSignUp) {
-                        try {
-                          if (!props.clerkSignUp) return;
-                          const res = await props.clerkSignUp.create({
-                            emailAddress: authEmail,
-                            password: authPassword,
-                            firstName: authName,
-                          });
-                          if (res.status === "complete") {
-                            await props.setSignUpActive({ session: res.createdSessionId });
-                            setAuthModal(false);
-                            setAuthEmail("");
-                            setAuthPassword("");
-                            setAuthName("");
-                            setAuthConfirmPassword("");
-                          } else if (res.status === "missing_requirements" && res.unverifiedFields?.includes("email_address")) {
-                            // If email verification is active, Clerk requests the verification code
-                            const code = prompt("Clerk sent a registration code to your email. Please enter it here:");
-                            if (code) {
-                              const completeSignup = await props.clerkSignUp.attemptEmailAddressVerification({ code });
-                              if (completeSignup.status === "complete") {
-                                await props.setSignUpActive({ session: completeSignup.createdSessionId });
-                                setAuthModal(false);
-                                setAuthEmail("");
-                                setAuthPassword("");
-                                setAuthName("");
-                                setAuthConfirmPassword("");
-                              } else {
-                                alert("Verify complete status: " + completeSignup.status);
-                              }
-                            }
-                          } else {
-                            alert("Clerk Sign Up Status: " + res.status);
-                          }
-                        } catch (err: any) {
-                          alert(err.errors?.[0]?.message || err.message || "Failed to Sign Up via Clerk");
-                        }
-                      } else {
-                        try {
-                          if (!props.clerkSignIn) return;
-                          const res = await props.clerkSignIn.create({
-                            identifier: authEmail,
-                            password: authPassword,
-                          });
-                          if (res.status === "complete") {
-                            await props.setSignInActive({ session: res.createdSessionId });
-                            setAuthModal(false);
-                            setAuthEmail("");
-                            setAuthPassword("");
-                            setAuthName("");
-                            setAuthConfirmPassword("");
-                          } else {
-                            alert("Clerk Sign In Status: " + res.status);
-                          }
-                        } catch (err: any) {
-                          alert(err.errors?.[0]?.message || err.message || "Failed to sign in via Clerk");
-                        }
-                      }
-                    } else {
-                      const displayName = isSignUp && authName ? authName : (authEmail ? authEmail.split('@')[0] : "Emily Johnson");
-                      setGuestUser(`${displayName.charAt(0).toUpperCase() + displayName.slice(1)} (Verified User)`);
-                      setAuthModal(false);
-                      setAuthEmail("");
-                      setAuthPassword("");
-                      setAuthName("");
-                      setAuthConfirmPassword("");
-                    }
+                    const displayName = authEmail ? authEmail.split('@')[0] : "Emily Johnson";
+                    setGuestUser(`${displayName.charAt(0).toUpperCase() + displayName.slice(1)} (Verified User)`);
+                    setAuthModal(false);
+                    setAuthEmail("");
+                    setAuthPassword("");
                   }}
                   className="w-full py-3.5 px-4 rounded-lg bg-[#009fff] hover:bg-[#008be5] text-white font-bold text-sm shadow-[0_4px_14px_rgba(0,159,255,0.25)] transition-all active:scale-[0.98] focus:outline-none cursor-pointer text-center"
                 >
@@ -4177,29 +4290,16 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
 
                 {/* Separator line */}
                 <div className="relative flex items-center py-1">
-                  <div className="flex-grow border-t border-slate-800/80"></div>
+                  <div className="flex-grow border-t border-slate-850"></div>
                   <span className="flex-shrink mx-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">OR</span>
-                  <div className="flex-grow border-t border-slate-800/80"></div>
+                  <div className="flex-grow border-t border-slate-850"></div>
                 </div>
 
                 {/* Google Sign In */}
                 <button 
                   onClick={async () => {
-                    if (props.isClerk) {
-                      try {
-                        if (!props.clerkSignIn) return;
-                        await props.clerkSignIn.authenticateWithRedirect({
-                          strategy: "oauth_google",
-                          redirectUrl: window.location.origin,
-                          redirectUrlComplete: window.location.origin,
-                        });
-                      } catch (err: any) {
-                        alert(err.message || "Google OAuth redirect failed.");
-                      }
-                    } else {
-                      setGuestUser("Emily Johnson (Verified User)");
-                      setAuthModal(false);
-                    }
+                    setGuestUser("Emily Johnson (Verified User)");
+                    setAuthModal(false);
                   }}
                   className="w-full py-3 px-4 rounded-lg bg-white hover:bg-slate-50 text-slate-900 font-semibold text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] focus:outline-none cursor-pointer shadow-md"
                 >
@@ -4226,17 +4326,10 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
 
                 {/* Environment guidance indicator */}
                 <div className="pt-2 text-center">
-                  {props.isClerk ? (
-                    <span className="inline-flex items-center gap-1.5 text-[11px] text-[#00eb88] bg-[#00eb88]/5 px-2.5 py-1 rounded-full border border-[#00eb88]/20 font-semibold">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#00eb88] animate-pulse"></span>
-                      🔒 Clerk Production Security Active
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 text-[11px] text-amber-400 bg-amber-450/5 px-2.5 py-1 rounded-full border border-amber-400/20 font-semibold">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                      💡 Offline Sandbox Session active
-                    </span>
-                  )}
+                  <span className="inline-flex items-center gap-1.5 text-[11px] text-amber-400 bg-amber-450/5 px-2.5 py-1 rounded-full border border-amber-400/20 font-semibold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                    💡 Offline Sandbox Session active
+                  </span>
                 </div>
 
               </div>
