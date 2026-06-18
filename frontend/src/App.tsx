@@ -942,7 +942,7 @@ export function AppContent() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
-  const [guestUser, setGuestUser] = useState<string | null>("Emily Johnson (Guest Partner)");
+  const [guestUser, setGuestUser] = useState<string | null>(null);
   const [showMemberForm, setShowMemberForm] = useState(false);
   
   // New member input states
@@ -4404,7 +4404,7 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                 {/* Google Sign In */}
                 <button 
                   onClick={async () => {
-                    setGuestUser("Emily Johnson (Verified User)");
+                    setGuestUser("Guest (Verified User)");
                     setAuthModal(false);
                   }}
                   className="w-full py-3 px-4 rounded-lg bg-white hover:bg-slate-50 text-slate-900 font-semibold text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] focus:outline-none cursor-pointer shadow-md"
