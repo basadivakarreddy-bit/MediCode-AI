@@ -833,6 +833,62 @@ export function AppContent() {
         .replace(/[•\-\*]/g, "")
         .trim();
       const utterance = new SpeechSynthesisUtterance(cleanText);
+
+      let langCode = "en-US";
+      if (selectedLanguage === "te") {
+        langCode = "te-IN";
+        utterance.rate = 0.82;
+        utterance.pitch = 1.05;
+      } else if (selectedLanguage === "hi") {
+        langCode = "hi-IN";
+        utterance.rate = 0.85;
+        utterance.pitch = 1.01;
+      } else {
+        langCode = "en-US";
+        utterance.rate = 0.88;
+        utterance.pitch = 1.0;
+      }
+      utterance.lang = langCode;
+
+      try {
+        const voices = window.speechSynthesis.getVoices();
+        const langLower = langCode.toLowerCase();
+        
+        const candidates = voices.filter((v) => {
+          const voiceLang = v.lang.toLowerCase().replace("_", "-");
+          return voiceLang === langLower || voiceLang.startsWith(selectedLanguage);
+        });
+
+        if (candidates.length > 0) {
+          const sorted = [...candidates].sort((a, b) => {
+            const scoreVoice = (voice: typeof a) => {
+              const name = voice.name.toLowerCase();
+              let pts = 0;
+              if (name.includes("google")) pts += 200;
+              if (name.includes("natural")) pts += 150;
+              if (name.includes("neural")) pts += 150;
+              if (name.includes("premium")) pts += 100;
+              
+              if (selectedLanguage === "te") {
+                if (name.includes("telugu") || name.includes("te-in") || name.includes("te_in")) pts += 350;
+                if (name.includes("gita") || name.includes("shruti") || name.includes("sandhya") || name.includes("latha") || name.includes("mohan")) pts += 150;
+              } else if (selectedLanguage === "hi") {
+                if (name.includes("hindi") || name.includes("hi-in") || name.includes("hi_in")) pts += 350;
+                if (name.includes("kalpana") || name.includes("heera") || name.includes("shruthi") || name.includes("pavan") || name.includes("swara")) pts += 150;
+              } else {
+                if (name.includes("en-us") || name.includes("en_us")) pts += 50;
+              }
+              if (name.includes("female") || name.includes("aurora") || name.includes("siri") || name.includes("zira")) pts += 25;
+              return pts;
+            };
+            return scoreVoice(b) - scoreVoice(a);
+          });
+          utterance.voice = sorted[0];
+        }
+      } catch (voiceError) {
+        console.warn("Could not load premium voice for chatbot message speech", voiceError);
+      }
+
       utterance.onend = () => setActiveSpeechId(null);
       utterance.onerror = () => setActiveSpeechId(null);
       setActiveSpeechId(msgId);
@@ -1441,7 +1497,8 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
         body: JSON.stringify({
           message: textToSubmit,
           history: currentDocMessages.slice(-6).map(m => ({ sender: m.sender === "user" ? "user" : "ai", text: m.text })),
-          context: activeDocData
+          context: activeDocData,
+          language: selectedLanguage
         })
       });
 

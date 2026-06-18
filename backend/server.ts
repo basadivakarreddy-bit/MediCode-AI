@@ -634,16 +634,36 @@ app.post("/api/translate", async (req, res): Promise<any> => {
 
 // API: Continuous Conversation / Chat with Medical Context
 app.post("/api/chat", async (req, res): Promise<any> => {
-  const { message, history, context } = req.body || {};
+  const { message, history, context, language } = req.body || {};
   try {
 
     const ai = getGenAI();
     if (!ai) {
       console.log("[API] No Gemini Client. Generating offline chatbot simulation.");
       // Return simple but extremely clever offline health simulation response in a structured points format
-      return res.json({
-        success: true,
-        text: `Healthcare Assistant (SaaS Demo Mode):
+      let responseText = "";
+      if (language === "te") {
+        responseText = `ఆరోగ్య సహాయకుడు (SaaS డెమో మోడ్):
+
+• **స్థితి ఉనికి**: నేను ప్రస్తుతం ఆఫ్‌లైన్ లోకల్ మోడ్‌లో నడుస్తున్నాను. ఎటువంటి ఏఐ కనెక్షన్ కనుగొనబడలేదు.
+• **విశ్లేషించబడిన రోగి**: పేరు "${context?.patient?.name || "Emily Johnson"}" మరియు వారి ఆరోగ్య స్కోరు ${context?.healthScore || "N/A"} (${context?.urgencyLevel || "సాధారణ"} అత్యవసరం).
+• **మీ ప్రశ్న**: "${message}"
+• **సాధారణ సలహా**: 
+  - దయచేసి మీ ఔషధాల షెడ్యూల్స్ నివేదికతో సరిపోలుతున్నాయని నిర్ధారించుకోండి.
+  - అన్ని మందుల లేబుల్‌లను జాగ్రత్తగా చదవండి మరియు సూచనలను పాటించండి.
+  - మరింత అనుకూలీకరించిన ప్రత్యక్ష ఏఐ ప్రశ్న సమాధానాలను సక్రియం చేయడానికి దయచేసి సెట్టింగ్స్ క్రింద మీ **GEMINI_API_KEY** ను కాన్ఫిగర్ చేయండి.`;
+      } else if (language === "hi") {
+        responseText = `स्वास्थ्य सहायक (SaaS डेमो मोड):
+
+• **स्थिति विवरण**: मैं वर्तमान में ऑफ़लाइन स्थानीय मोड में काम कर रहा हूँ। कोई लाइव एएआई कनेक्शन नहीं मिला।
+• **विश्लेषित मरीज**: नाम "${context?.patient?.name || "Emily Johnson"}" है और स्वास्थ्य स्कोर है ${context?.healthScore || "N/A"} (${context?.urgencyLevel || "सामान्य"} तात्कालिकता)।
+• **आपका प्रश्न**: "${message}"
+• **सामान्य परिप्रेक्ष्य**: 
+  - कृपया सुनिश्चित करें कि आपकी दवा की समय-सारणी सूची में सेट की गई दवाओं के साथ मेल खाती है।
+  - सभी दवा लेबल ध्यान से पढ़ें और स्पष्ट दिशानिर्देशों का पालन करें।
+  - पूरी तरह से अनुकूलित लाइव एआई प्रश्न उत्तरों को सक्रिय करने के लिए कृपया सेटिंग्स के तहत एक उचित **GEMINI_API_KEY** कॉन्फ़िगर करें।`;
+      } else {
+        responseText = `Healthcare Assistant (SaaS Demo Mode):
 
 • **Direct Status**: I am currently running in offline local mode. No live AI connection was detected.
 • **Analyzed Patient**: Name is "${context?.patient?.name || "Emily Johnson"}" with a health score of ${context?.healthScore || "N/A"} (${context?.urgencyLevel || "Normal"} urgency).
@@ -651,7 +671,12 @@ app.post("/api/chat", async (req, res): Promise<any> => {
 • **General Perspective**: 
   - Please ensure your medication schedules align with those set in your list.
   - Read all medicine labels carefully and stick to direct guidelines.
-  - Please configure a proper **GEMINI_API_KEY** in your secret variables to activate fully customized live contextual question answers.`
+  - Please configure a proper **GEMINI_API_KEY** in your secret variables to activate fully customized live contextual question answers.`;
+      }
+
+      return res.json({
+        success: true,
+        text: responseText
       });
     }
 
@@ -677,6 +702,8 @@ app.post("/api/chat", async (req, res): Promise<any> => {
       4. Always stay inside your scope: explain medical terms simply (e.g., LDL, HbA1c, ALT, dosages, timings), reassure the patient, suggest dietary tips, and provide warnings.
       5. Briefly state that you are an AI assistant and NOT a replacement for an actual doctor.
       6. Do NOT invent new personal clinical diagnoses or metrics outside the provided document context.
+      7. CRITICAL LANGUAGE REQUIREMENT: You MUST respond in the following language: ${language === "te" ? "Telugu (తెలుగు)" : language === "hi" ? "Hindi (हिंदी)" : "English"}.
+         Even if the patient's context or history is in English, translate your answers and output them entirely in the requested language ${language === "te" ? "Telugu using Telugu script" : language === "hi" ? "Hindi using Devanagari script" : "English script"}. Let your tone be natural, polite, and helpful in that selected language.
     `;
 
     // Map history to the structured chat history expected by Gemini SDK or use a raw conversation model
@@ -716,18 +743,42 @@ app.post("/api/chat", async (req, res): Promise<any> => {
 
   } catch (error: any) {
     console.error("[API] Error in AI Chat, returning resilient simulated assistant response:", error);
-    return res.json({
-      success: true,
-      source: "chat_fallback",
-      message: `Chat assistant quota busy (${error.message}). Switched to local clinical knowledge advisor.`,
-      text: `Hello! I am MediCode's offline clinical advisor assistant. Due to high demand or quota limits on our server's live AI keys, I am currently responding in offline mode.
+    
+    let fallbackText = "";
+    if (language === "te") {
+      fallbackText = `నమస్కారం! నేను మెడికోడ్ యొక్క లోకల్ ఆఫ్‌లైన్ క్లినికల్ సలహా సహాయకుడిని. సర్వర్ యొక్క ప్రత్యక్ష ఏఐ కీలపై అధిక డిమాండ్ లేదా పరిమితుల కారణంగా, నేను ప్రస్తుతం ఆఫ్‌లైన్ మోడ్‌లో స్పందిస్తున్నాను.
+
+పరిస్థితి విశ్లేషణ (రోగి: **${context?.patient?.name || "Emily Johnson"}**, ఆరోగ్య స్కోరు: **${context?.healthScore || "N/A"}**):
+- **మందుల నియమావళి**: దయచేసి అన్ని మందులను మీ ప్రిస్క్రిప్షన్ షెడ్యూల్‌ల ప్రకారం ఖచ్చితంగా తీసుకోండి.
+- **ఆహార మరియు జీవనశైలి మార్గదర్శకాలు**: ఎక్కువ పీచుపదార్థం (ఫైబర్) తీసుకోండి, శరీరంలో తడి శాతం ఎక్కువగా ఉండేలా నీరు తాగండి మరియు అలర్జీ కలిగించే వాటిని నివారించండి.
+- **తదుపరి చర్యలు**: ఏవైనా తీవ్రమైన లక్షణాల కోసం మీ వైద్యుడిని లేదా ఆరోగ్య నిపుణుడిని సంప్రదించండి.
+
+లైవ్ ఏఐని సక్రియం చేయడానికి దయచేసి సెట్టింగ్స్ లో మీ ఏఐ కీని కాన్ఫిగర్ చేయండి.`;
+    } else if (language === "hi") {
+      fallbackText = `नमस्ते! मैं मेडिकोड का ऑफ़लाइन नैदानिक सलाहकार सहायक हूँ। हमारे सर्वर की लाइव एआई कुंजियों पर उच्च मांग या कोटा सीमा के कारण, मैं वर्तमान में ऑफ़लाइन मोड में प्रतिक्रिया दे रहा हूँ।
+
+आपकी रिपोर्ट का विश्लेषण (मरीज: **${context?.patient?.name || "Emily Johnson"}**, स्वास्थ्य स्कोर: **${context?.healthScore || "N/A"}**):
+- **दवा अनुपालन और सुरक्षा**: कृपया सुनिश्चित करें कि सभी दवाएं आपके मेडिकल नुस्खे के अनुसार बिल्कुल वैसे ही ली जाएं।
+- **आहार और जीवन शैली**: अधिक फाइबर शामिल करने, पूरी तरह से हाइड्रेटेड रहने और सामान्य एलर्जी से बचने पर विचार करें।
+- **अगले कदम**: किसी भी तीव्र लक्षण के लिए कृपया अपने चिकित्सक या स्वास्थ्य विशेषज्ञ से परामर्श लें।
+
+लाइव एआई सक्रिय करने के लिए कृपया सेटिंग्स के तहत अपनी एआई की को कॉन्फ़िगर करें।`;
+    } else {
+      fallbackText = `Hello! I am MediCode's offline clinical advisor assistant. Due to high demand or quota limits on our server's live AI keys, I am currently responding in offline mode.
 
 Based on your current analyzed document (Patient: **${context?.patient?.name || "Emily Johnson"}**, Health Score: **${context?.healthScore || "N/A"}**):
 - **Adherence & Safety**: Please ensure all medications are taken exactly as directed on your medical prescription schedules.
 - **Dietary & Lifestyle Guidelines**: Consider introducing more fiber, staying fully hydrated, and avoiding common allergens.
 - **Next Steps**: Please consult your physician or health specialist for any acute symptoms.
 
-If you have a primary key, you can configure it under settings to reactivate live chatbot intelligence.`
+If you have a primary key, you can configure it under settings to reactivate live chatbot intelligence.`;
+    }
+
+    return res.json({
+      success: true,
+      source: "chat_fallback",
+      message: `Chat assistant quota busy (${error.message}). Switched to local clinical knowledge advisor.`,
+      text: fallbackText
     });
   }
 });
