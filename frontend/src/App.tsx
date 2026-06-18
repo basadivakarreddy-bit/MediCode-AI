@@ -60,7 +60,8 @@ import {
   VolumeX,
   Edit,
   Mic,
-  MicOff
+  MicOff,
+  LogOut
 } from "lucide-react";
 
 import { AnalysisResult, FamilyMember, SavedDocument, ChatMessage, TimelineMetric } from "./types";
@@ -468,6 +469,7 @@ export function AppContent() {
   }, [translatedCache]);
 
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState<boolean>(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState<boolean>(false);
   const translationFetchInProgress = useRef<Record<string, boolean>>({});
   
   // Clinical Session States
@@ -2102,19 +2104,48 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
               </div>
 
               {/* GUEST MODE STATE INDICATOR / AUTH TRIGGERS */}
-              {guestUser && guestUser.includes("(Verified User)") ? (
-                <button
-                  onClick={() => setGuestUser("Emily Johnson (Guest Partner)")}
-                  className={`flex items-center gap-1.5 px-4.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-300 cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-95 focus:outline-none border ${
-                    theme === "dark"
-                      ? "bg-slate-900/80 border-rose-500/30 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 hover:border-rose-400/50 shadow-rose-950/20"
-                      : "bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white border-transparent shadow-rose-100"
-                  }`}
-                  title="Click to Logout Sandbox Session"
-                >
-                  <User className="w-3.5 h-3.5" />
-                  <span className="truncate max-w-[120px]">Sign Out ({guestUser.replace(" (Verified User)", "")})</span>
-                </button>
+              {guestUser ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                    className="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-tr from-cyan-500 via-blue-500 to-indigo-550 hover:from-cyan-400 hover:to-indigo-400 text-white font-extrabold text-[15px] shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer border border-cyan-400/30"
+                    title={`User: ${guestUser.split('(')[0].trim()}`}
+                  >
+                    {guestUser.split('(')[0].trim().charAt(0).toUpperCase() || "U"}
+                  </button>
+
+                  {isUserDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsUserDropdownOpen(false)} />
+                      <div className={`absolute right-0 mt-2 w-48 rounded-xl border shadow-lg z-50 overflow-hidden transform origin-top-right transition-all duration-200 ${
+                        theme === "dark" ? "bg-slate-950 border-slate-800 text-slate-200" : "bg-white border-slate-200 text-slate-700"
+                      }`}>
+                        <div className={`px-3 py-2.5 border-b text-xs ${theme === "dark" ? "border-slate-800/80 text-slate-400" : "border-slate-100 text-slate-500"}`}>
+                          <span className={`font-semibold block truncate ${theme === "dark" ? "text-slate-300" : "text-slate-700"}`}>
+                            {guestUser.split('(')[0].trim()}
+                          </span>
+                          <span className="text-[10px] text-slate-500 block mt-0.5">
+                            {guestUser.includes("Verified") ? "Verified Account" : "Guest Partner session"}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setGuestUser(null);
+                            setIsUserDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2.5 text-xs transition-colors flex items-center gap-2 cursor-pointer ${
+                            theme === "dark"
+                              ? "hover:bg-rose-500/15 text-rose-400 hover:text-rose-300"
+                              : "hover:bg-rose-50 text-rose-600 hover:text-rose-700"
+                          }`}
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          <span className="font-bold">Sign Out</span>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               ) : (
                 <button
                   onClick={() => { setIsSignUp(false); setAuthModal(true); }}
@@ -2894,7 +2925,25 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
                                 : selectedLanguage === "hi"
                                   ? "नुस्खे (प्रिस्क्रिप्शन) में 29/11/26 और 27/10/2026 तारीखें भी शामिल हैं, जो अनुवर्ती (फॉलो-अप) या पिछले नुस्खे से संबंधित हो सकती हैं। इसमें घेरे गए नंबर '5' and '35' भी हैं जिनका संदर्भ स्पष्ट नहीं है।"
                                   : "The prescription also contains dates 29/11/26 and 27/10/2026, which might be related to follow-up or previous prescriptions. There are also circled numbers '5' and '35' which are unclear in their context."
-                              : (activeDocData.summary || "Take your medications precisely as written.")}
+                              : (() => {
+                                  const parts: string[] = [];
+                                  if (activeDocData.recommendations && activeDocData.recommendations.length > 0) {
+                                    parts.push(...activeDocData.recommendations);
+                                  }
+                                  if (activeDocData.warnings && activeDocData.warnings.length > 0) {
+                                    parts.push(...activeDocData.warnings);
+                                  }
+                                  if (parts.length > 0) {
+                                    return parts.join(" ");
+                                  }
+                                  
+                                  if (selectedLanguage === "te") {
+                                    return "ఈ వైద్య పత్రం నుండి తదుపరి నిర్దిష్ట అదనపు గమనికలు ఏవీ కనుగొనబడలేదు. దయచేసి పైన పేర్కొన్న వివరాలను అనుసరించండి మరియు సూచించిన అన్ని మందుల యొక్క కరపత్రాలను జాగ్రత్తగా చదవండి.";
+                                  } else if (selectedLanguage === "hi") {
+                                    return "इस चिकित्सा दस्तावेज से कोई अतिरिक्त विशिष्ट नोट नहीं मिला। कृपया ऊपर दिए गए विवरण का पालन करें और सभी निर्धारित दवाओं के पत्रक ध्यान से पढ़ें।";
+                                  }
+                                  return "No extra notes parsed from this medical document. Please refer to medicine-specific instructions above and read all warnings carefully.";
+                                })()}
                           </p>
                         </div>
                       </div>
