@@ -32,5 +32,11 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.3"
-  }
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "Android >= 6",
+    "Chrome >= 60"
+  ]
 }

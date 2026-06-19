@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { Component, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -71,6 +71,38 @@ import { HealthTimeline } from "./components/HealthTimeline";
 import { FAQContact } from "./components/FAQContact";
 
 const API_BASE_URL = (((import.meta as any).env?.VITE_API_BASE_URL) as string || "https://medicode-ai.onrender.com").replace(/\/$/, "");
+
+// Robust LocalStorage safe wrapper targeting iframe sandbox, Private WebView and WebView containers
+const safeLocalStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        return window.localStorage.getItem(key);
+      }
+    } catch (e) {
+      console.warn(`localStorage getItem blocked/unavailable for key "${key}":`, e);
+    }
+    return null;
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        window.localStorage.setItem(key, value);
+      }
+    } catch (e) {
+      console.warn(`localStorage setItem blocked/unavailable for key "${key}":`, e);
+    }
+  },
+  removeItem: (key: string): void => {
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        window.localStorage.removeItem(key);
+      }
+    } catch (e) {
+      console.warn(`localStorage removeItem blocked/unavailable for key "${key}":`, e);
+    }
+  }
+};
 
 const LABELS: Record<string, Record<string, string>> = {
   en: {
@@ -452,7 +484,7 @@ export function AppContent() {
   const [isTranslating, setIsTranslating] = useState<boolean>(false);
   const [translatedCache, setTranslatedCache] = useState<Record<string, Record<string, any>>>(() => {
     const defaultCache = { ...PRELOADED_TRANSLATIONS };
-    const saved = localStorage.getItem("medidecode_translated_cache");
+    const saved = safeLocalStorage.getItem("medidecode_translated_cache");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -465,7 +497,7 @@ export function AppContent() {
   });
 
   useEffect(() => {
-    localStorage.setItem("medidecode_translated_cache", JSON.stringify(translatedCache));
+    safeLocalStorage.setItem("medidecode_translated_cache", JSON.stringify(translatedCache));
   }, [translatedCache]);
 
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState<boolean>(false);
@@ -476,7 +508,7 @@ export function AppContent() {
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(INITIAL_FAMILY_MEMBERS);
   const [activeMemberId, setActiveMemberId] = useState<string>("self");
   const [documents, setDocuments] = useState<SavedDocument[]>(() => {
-    const saved = localStorage.getItem("medidecode_patient_documents");
+    const saved = safeLocalStorage.getItem("medidecode_patient_documents");
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -488,11 +520,11 @@ export function AppContent() {
   });
 
   useEffect(() => {
-    localStorage.setItem("medidecode_patient_documents", JSON.stringify(documents));
+    safeLocalStorage.setItem("medidecode_patient_documents", JSON.stringify(documents));
   }, [documents]);
 
   const [timelineMetrics, setTimelineMetrics] = useState<TimelineMetric[]>(() => {
-    const saved = localStorage.getItem("medidecode_patient_timeline_metrics");
+    const saved = safeLocalStorage.getItem("medidecode_patient_timeline_metrics");
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -504,7 +536,7 @@ export function AppContent() {
   });
 
   useEffect(() => {
-    localStorage.setItem("medidecode_patient_timeline_metrics", JSON.stringify(timelineMetrics));
+    safeLocalStorage.setItem("medidecode_patient_timeline_metrics", JSON.stringify(timelineMetrics));
   }, [timelineMetrics]);
   
   // History tab sub-states & live timeline data
@@ -961,7 +993,7 @@ export function AppContent() {
   });
   const [completedCalendarDoses, setCompletedCalendarDoses] = useState<Record<string, boolean>>(() => {
     try {
-      const saved = localStorage.getItem("medidecode_completed_calendar_doses");
+      const saved = safeLocalStorage.getItem("medidecode_completed_calendar_doses");
       return saved ? JSON.parse(saved) : {};
     } catch {
       return {};
@@ -969,7 +1001,7 @@ export function AppContent() {
   });
 
   useEffect(() => {
-    localStorage.setItem("medidecode_completed_calendar_doses", JSON.stringify(completedCalendarDoses));
+    safeLocalStorage.setItem("medidecode_completed_calendar_doses", JSON.stringify(completedCalendarDoses));
   }, [completedCalendarDoses]);
 
   // Alarms and Voice Reminders State
@@ -981,7 +1013,7 @@ export function AppContent() {
     active: boolean;
   }>>(() => {
     try {
-      const saved = localStorage.getItem("medidecode_custom_reminders");
+      const saved = safeLocalStorage.getItem("medidecode_custom_reminders");
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error(e);
@@ -1024,13 +1056,16 @@ export function AppContent() {
   };
 
   useEffect(() => {
-    localStorage.setItem("medidecode_custom_reminders", JSON.stringify(customReminders));
+    safeLocalStorage.setItem("medidecode_custom_reminders", JSON.stringify(customReminders));
   }, [customReminders]);
 
   const lastSpokenRef = useRef<string>("");
 
   const speakVoiceMessage = (text: string) => {
     try {
+      if (typeof window === "undefined" || !window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+        return;
+      }
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.volume = 1;
@@ -1128,7 +1163,7 @@ export function AppContent() {
 
   // Set up service worker offline notification triggers
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
       console.log('MediCode PWA Service Worker Registered.');
     }
   }, []);
@@ -1150,8 +1185,17 @@ export function AppContent() {
   const speakReportSummary = (forcePlayArg?: boolean | any) => {
     const forcePlay = typeof forcePlayArg === "boolean" ? forcePlayArg : false;
 
+    if (typeof window === "undefined" || !window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+      console.warn("Speech synthesis not supported on this rendering engine");
+      return;
+    }
+
     if (voiceReadingActive && !forcePlay) {
-      window.speechSynthesis.cancel();
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {
+        console.error(e);
+      }
       setVoiceReadingActive(false);
       return;
     }
@@ -1169,7 +1213,7 @@ export function AppContent() {
       langCode = "te-IN";
       message = `రోగి ${patientName} కొరకు మెడికోడ్ ఏఐ నివేదిక సారాంశం.
 ఈ నివేదిక మూల్యాంకనం మొత్తం ${score} శాతం ఆరోగ్య సమ్మతి స్కోరును చూపుతోంది, ఇది ${urgency} అత్యవసర పారామితులను సూచిస్తుంది.
-డీకోడ్ చేయబడిన సారాంశం ఇలా ఉంది: ${summaryText}. తగిన జాగ్రత్తలు తీసుకోండి మరియు ఔషధాల ట్యాబ్ క్రింద షెడ్యూల్ చేయబడిన మందులను తనిఖీ చేయండి. వివరణను మ్యూట్ చేయడానికి దయచేసి స్పీకర్ బటన్‌ను మళ్లీ తాకండి.`;
+డీకోడ్ చేయబడిన సారాంశం ఇలా ఉంది: ${summaryText}. తగిన జాగ్రత్తలు తీసుకోండి మరియు ఔషధాల ట్యాబ్ క్రింద షెడ్యూль చేయబడిన మందులను తనిఖీ చేయండి. వివరణను మ్యూట్ చేయడానికి దయచేసి స్పీకర్ బటన్‌ను మళ్లీ తాకండి.`;
     } else if (selectedLanguage === "hi") {
       langCode = "hi-IN";
       message = `मरीज ${patientName} के लिए मेडिकोड एआई रिपोर्ट सारांश।
@@ -1244,22 +1288,39 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
     utterance.onend = () => setVoiceReadingActive(false);
     
     setVoiceReadingActive(true);
-    window.speechSynthesis.speak(utterance);
+    try {
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.error(e);
+      setVoiceReadingActive(false);
+    }
   };
 
   // Stop sound if document selection changes
   useEffect(() => {
-    window.speechSynthesis.cancel();
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {
+        console.error(e);
+      }
+    }
     setVoiceReadingActive(false);
   }, [selectedDocId]);
 
   // Cancel and restart speech narration if language or translation updates while active
   useEffect(() => {
-    if (voiceReadingActive) {
-      window.speechSynthesis.cancel();
-      speakReportSummary(true);
-    } else {
-      window.speechSynthesis.cancel();
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      try {
+        if (voiceReadingActive) {
+          window.speechSynthesis.cancel();
+          speakReportSummary(true);
+        } else {
+          window.speechSynthesis.cancel();
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
   }, [selectedLanguage, activeDocData?.summary]);
 
@@ -5141,7 +5202,88 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
   );
 }
 
+interface ErrorBoundaryProps {
+  children?: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState;
+  public props: ErrorBoundaryProps;
+
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.props = props;
+    this.state = { hasError: false, error: null };
+  }
+
+  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Uncaught rendering error caught by ErrorBoundary:", error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center font-sans">
+          <div className="max-w-md w-full p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-6">
+            <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-2xl flex items-center justify-center mx-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            
+            <div className="space-y-2">
+              <h1 className="text-xl font-extrabold text-white tracking-tight">Oops! Something went wrong</h1>
+              <p className="text-sm text-slate-400">
+                A rendering issue was detected on this device. We have caught the error gracefully.
+              </p>
+            </div>
+
+            {this.state.error && (
+              <div className="p-3 bg-rose-950/20 border border-rose-500/20 rounded-xl text-left">
+                <span className="text-[10px] uppercase tracking-wider font-mono font-bold text-rose-400 block mb-1">
+                  Exception details:
+                </span>
+                <p className="text-xs font-mono text-rose-300 break-all leading-normal">
+                  {this.state.error.toString()}
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => {
+                try {
+                  window.location.reload();
+                } catch {
+                  (this as any).setState({ hasError: false, error: null });
+                }
+              }}
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-md transition-all active:scale-95 cursor-pointer"
+            >
+              Reload Application
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 export default function App() {
-  return <AppContent isClerk={false} />;
+  return (
+    <ErrorBoundary>
+      <AppContent isClerk={false} />
+    </ErrorBoundary>
+  );
 }
 

@@ -16,6 +16,7 @@ export default defineConfig(() => {
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
     build: {
+      target: ['es2015', 'chrome60', 'ios12'],
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
