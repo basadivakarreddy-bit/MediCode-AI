@@ -6,6 +6,7 @@
 import React, { Component, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
+import { jsPDF } from "jspdf";
 
 import { 
   Brain, 
@@ -1066,11 +1067,29 @@ export function AppContent() {
       if (typeof window === "undefined" || !window.speechSynthesis || !window.SpeechSynthesisUtterance) {
         return;
       }
+      
+      // Audio Unlock: immediately speak an empty string to unlock context on active trigger
+      try {
+        const unlockUtterance = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(unlockUtterance);
+      } catch (unlockErr) {
+        console.warn("Alarm speech synthesis mobile block unlock failed:", unlockErr);
+      }
+
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.volume = 1;
       utterance.rate = 1.0;
-      window.speechSynthesis.speak(utterance);
+      
+      // Delayed async execution block
+      setTimeout(() => {
+        try {
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utterance);
+        } catch (speakErr) {
+          console.error("Delayed alarm speak failed:", speakErr);
+        }
+      }, 60);
     } catch (e) {
       console.error("Speech Synthesis error:", e);
     }
@@ -1190,6 +1209,14 @@ export function AppContent() {
       return;
     }
 
+    // Audio Unlock Pattern: Immediately trigger a silent, empty utterance on the user interaction tick to unlock HTML5 browser context
+    try {
+      const unlockUtterance = new SpeechSynthesisUtterance("");
+      window.speechSynthesis.speak(unlockUtterance);
+    } catch (unlockErr) {
+      console.warn("SpeechSynthesis mobile audio unlock context failed:", unlockErr);
+    }
+
     if (voiceReadingActive && !forcePlay) {
       try {
         window.speechSynthesis.cancel();
@@ -1288,12 +1315,16 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
     utterance.onend = () => setVoiceReadingActive(false);
     
     setVoiceReadingActive(true);
-    try {
-      window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      console.error(e);
-      setVoiceReadingActive(false);
-    }
+    // Asynchronous bridge: Execute inside a timeout to allow the initial unprimed unlock event to fully execute on the main thread first
+    setTimeout(() => {
+      try {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        console.error("WebView delayed speech activation failed:", e);
+        setVoiceReadingActive(false);
+      }
+    }, 60);
   };
 
   // Stop sound if document selection changes
@@ -1673,59 +1704,6 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
 
     const isPrescription = activeDoc.docType === "prescription";
 
-    const medicinesListHtml = isPrescription 
-      ? (activeDocData.medicines || [])
-          .map((med: any, idx: number) => `
-            <div class="print-med-item">
-              <h3 class="print-med-title">${idx + 1}. ${med.name}</h3>
-              <div class="print-med-details-list">
-                <div class="print-med-detail-row">
-                  <span class="print-med-label">${labels.dosage}:</span>
-                  ${med.dosage || labels.notSpecified}
-                </div>
-                <div class="print-med-detail-row">
-                  <span class="print-med-label">${labels.frequency}:</span>
-                  ${med.timing || labels.onceDaily}
-                </div>
-                <div class="print-med-detail-row">
-                  <span class="print-med-label">${labels.duration}:</span>
-                  ${med.duration || "30 days"}
-                </div>
-                <div class="print-med-detail-row">
-                  <span class="print-med-label">${labels.instructions}:</span>
-                  ${med.instructions || labels.notSpecified}
-                </div>
-                ${med.purpose ? `
-                <div class="print-med-detail-row">
-                  <span class="print-med-label">${labels.purpose}:</span>
-                  ${med.purpose}
-                </div>` : ''}
-              </div>
-            </div>
-          `)
-          .join("")
-      : (activeDocData.labResults || [])
-          .map((res: any, idx: number) => `
-            <div class="print-med-item" style="border-bottom: 1px dotted #e2e8f0; padding-bottom: 10px;">
-              <h3 class="print-med-title">${idx + 1}. ${res.name}</h3>
-              <div class="print-med-details-list">
-                <div class="print-med-detail-row">
-                  <span class="print-med-label">${labels.val}:</span>
-                  <strong>${res.currentValue}</strong> (${res.normalRange})
-                </div>
-                <div class="print-med-detail-row">
-                  <span class="print-med-label">${labels.status}:</span>
-                  <span style="font-weight: bold; color: ${res.status === 'High' ? '#e53e3e' : res.status === 'Low' ? '#3182ce' : '#38a169'}">${res.status}</span>
-                </div>
-                <div class="print-med-detail-row">
-                  <span class="print-med-label">Info:</span>
-                  ${res.explanation}
-                </div>
-              </div>
-            </div>
-          `)
-          .join("");
-
     const summaryNotes = activeDoc.id === "doc-1" && selectedLanguage === "en"
       ? "The prescription also contains dates 29/11/26 and 27/10/2026, which might be related to follow-up or previous prescriptions. There are also circled numbers '5' and '35' which are unclear in their context."
       : (activeDocData.summary || "All details decoded successfully.");
@@ -1736,219 +1714,274 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
 
     const reportTitle = isPrescription ? labels.extractedPrescriptionResult : labels.clinicalSummaryDeciphered;
 
-    const exportHtml = `<!DOCTYPE html>
-<html lang="${selectedLanguage}">
-<head>
-  <meta charset="UTF-8">
-  <title>${reportTitle}</title>
-  <style>
-    body {
-      background-color: #ffffff !important;
-      color: #0d1b2a !important;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    .print-btn-container {
-      display: flex;
-      justify-content: center;
-      padding: 20px 0;
-      background: #f7fafc;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    .print-btn {
-      background-color: #2b6cb0;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      font-size: 14px;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-      transition: background-color 0.2s;
-    }
-    .print-btn:hover {
-      background-color: #2c5282;
-    }
-    .print-container {
-      width: 100% !important;
-      max-width: 650px !important;
-      margin: 40px auto !important;
-      background: #ffffff !important;
-      padding: 20px !important;
-    }
-    .print-title {
-      text-align: center !important;
-      font-size: 20pt !important;
-      font-weight: 800 !important;
-      color: #1a365d !important;
-      text-transform: uppercase !important;
-      letter-spacing: 0.5px !important;
-      margin-top: 15pt !important;
-      margin-bottom: 35pt !important;
-    }
-    .print-h2 {
-      font-size: 14pt !important;
-      font-weight: 700 !important;
-      color: #2b6cb0 !important;
-      margin-top: 25pt !important;
-      margin-bottom: 12pt !important;
-      border-bottom: 1.5px solid #e2e8f0 !important;
-      padding-bottom: 4pt !important;
-    }
-    .print-info-grid {
-      margin-bottom: 20pt !important;
-    }
-    .print-info-row {
-      font-size: 11pt !important;
-      line-height: 1.7 !important;
-      margin-bottom: 4pt !important;
-      color: #2d3748 !important;
-    }
-    .print-info-label {
-      font-weight: 700 !important;
-      display: inline-block !important;
-      width: 155px !important;
-      color: #1a202c !important;
-    }
-    .print-med-item {
-      margin-bottom: 18pt !important;
-      page-break-inside: avoid !important;
-    }
-    .print-med-title {
-      font-size: 12.5pt !important;
-      font-weight: 700 !important;
-      color: #2b6cb0 !important;
-      margin-bottom: 5pt !important;
-    }
-    .print-med-details-list {
-      padding-left: 12pt !important;
-    }
-    .print-med-detail-row {
-      font-size: 11pt !important;
-      line-height: 1.6 !important;
-      margin-bottom: 3pt !important;
-      color: #2d3748 !important;
-    }
-    .print-med-label {
-      font-weight: 700 !important;
-      display: inline-block !important;
-      width: 110px !important;
-      color: #1a202c !important;
-    }
-    .print-notes-body {
-      font-size: 11pt !important;
-      line-height: 1.65 !important;
-      color: #2d3748 !important;
-      margin-top: 5pt !important;
-    }
-    .print-disclaimer-footer {
-      margin-top: 50pt !important;
-      text-align: center !important;
-      color: #718096 !important;
-      font-size: 10pt !important;
-      line-height: 1.5 !important;
-      border-top: 1px solid #e2e8f0 !important;
-      padding-top: 15pt !important;
-      page-break-inside: avoid !important;
-    }
-    @media print {
-      body {
-        background-color: #ffffff !important;
-        margin: 0 !important;
-        padding: 0 !important;
+    // Mobile WebView friendly PDF stream generator using jsPDF
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4"
+    });
+
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const leftMargin = 20;
+    const contentWidth = pageWidth - (leftMargin * 2);
+    let currentY = 25;
+
+    const checkPageBreak = (neededHeight: number) => {
+      if (currentY + neededHeight > pageHeight - 25) {
+        doc.addPage();
+        drawPageBorder();
+        currentY = 25;
       }
-      .print-btn-container {
-        display: none !important;
-      }
-      .print-container {
-        margin: 0 auto !important;
-        padding: 0 !important;
-        max-width: 100% !important;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="print-btn-container">
-    <button class="print-btn" onclick="window.print()">${selectedLanguage === "te" ? "రిపోర్ట్ డౌన్‌లోడ్" : selectedLanguage === "hi" ? "रिपोर्ट डाउनलोड" : "Download/Print PDF Report"}</button>
-  </div>
-  <div class="print-container">
-    <h1 class="print-title">${reportTitle}</h1>
-    
-    <div>
-      <h2 class="print-h2">${labels.patientName} ${selectedLanguage === "en" ? "Information" : ""}</h2>
-      <div class="print-info-grid">
-        <div class="print-info-row">
-          <span class="print-info-label">${labels.patientName}:</span>
-          ${patientName}
-        </div>
-        <div class="print-info-row">
-          <span class="print-info-label">${labels.doctorName}:</span>
-          ${doctorName}
-        </div>
-        <div class="print-info-row">
-          <span class="print-info-label">${labels.date}:</span>
-          ${date}
-        </div>
-        <div class="print-info-row">
-          <span class="print-info-label">${selectedLanguage === "te" ? "నివేదన సమయం" : selectedLanguage === "hi" ? "रिपोर्ट समय" : "Report Generated"}:</span>
-          ${reportGenerated}
-        </div>
-      </div>
-    </div>
-
-    <div>
-      <h2 class="print-h2">${isPrescription ? labels.prescribedMedications : labels.labResultsHub}</h2>
-      <div>
-        ${medicinesListHtml}
-      </div>
-    </div>
-
-    <div>
-      <h2 class="print-h2">${labels.quickSummary}</h2>
-      <p class="print-notes-body" style="background: #e2f1f5; border-left: 4px solid #319795; padding: 10px; border-radius: 4px;">
-        ${quickSummaryNotes}
-      </p>
-    </div>
-
-    <div>
-      <h2 class="print-h2">${labels.additionalNotes}</h2>
-      <p class="print-notes-body">
-        ${summaryNotes}
-      </p>
-    </div>
-
-    <div class="print-disclaimer-footer">
-      <p style="font-style: italic; margin: 0 0 4px 0;">This report was generated by MediCode AI.</p>
-      <p style="font-style: italic; margin: 0;">Please verify all information with a qualified healthcare professional.</p>
-    </div>
-  </div>
-  <script>
-    window.onload = function() {
-      setTimeout(function() {
-        window.print();
-      }, 250);
     };
-  </script>
-</body>
-</html>`;
+
+    const drawPageBorder = () => {
+      // Clinical accents
+      doc.setFillColor(14, 165, 233); // cyan-500
+      doc.rect(0, 0, pageWidth, 4, "F");
+
+      // Footer disclaimer
+      doc.setFont("Helvetica", "oblique");
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184); // slate-400
+      doc.text(
+        "Powered by MediCode AI — High-fidelity Clinical Analysis Report. Consult a physician for validation.",
+        pageWidth / 2,
+        pageHeight - 12,
+        { align: "center" }
+      );
+      
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      doc.text(`Page ${pageCount}`, pageWidth - leftMargin, pageHeight - 12, { align: "right" });
+    };
+
+    // Draw page decorations on first page
+    drawPageBorder();
+
+    // Clinical Analysis Report Header
+    doc.setFillColor(30, 41, 59); // slate-800
+    doc.rect(leftMargin - 2, currentY, contentWidth + 4, 12, "F");
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(255, 255, 255);
+    doc.text(reportTitle.toUpperCase(), pageWidth / 2, currentY + 7.5, { align: "center" });
+    
+    currentY += 21;
+
+    // Patient Details Sector
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(14, 116, 144); // cyan-700
+    doc.text(labels.patientName.toUpperCase(), leftMargin, currentY);
+    currentY += 4;
+    doc.setDrawColor(203, 213, 225); // slate-300
+    doc.setLineWidth(0.4);
+    doc.line(leftMargin, currentY, leftMargin + contentWidth, currentY);
+    currentY += 8;
+
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(51, 65, 85); // slate-700
+    
+    doc.setFont("Helvetica", "bold");
+    doc.text(`${labels.patientName}:`, leftMargin, currentY);
+    doc.setFont("Helvetica", "normal");
+    doc.text(patientName, leftMargin + 32, currentY);
+    
+    doc.setFont("Helvetica", "bold");
+    doc.text(`${labels.doctorName}:`, leftMargin + 85, currentY);
+    doc.setFont("Helvetica", "normal");
+    doc.text(doctorName, leftMargin + 115, currentY);
+    currentY += 7;
+
+    doc.setFont("Helvetica", "bold");
+    doc.text(`${labels.date}:`, leftMargin, currentY);
+    doc.setFont("Helvetica", "normal");
+    doc.text(date, leftMargin + 32, currentY);
+
+    doc.setFont("Helvetica", "bold");
+    doc.text("Generated:", leftMargin + 85, currentY);
+    doc.setFont("Helvetica", "normal");
+    doc.text(reportGenerated, leftMargin + 115, currentY);
+    currentY += 15;
+
+    // Prescribed / Lab parameters Content Box
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(14, 116, 144); // cyan-700
+    doc.text(isPrescription ? labels.prescribedMedications.toUpperCase() : labels.labResultsHub.toUpperCase(), leftMargin, currentY);
+    currentY += 4;
+    doc.line(leftMargin, currentY, leftMargin + contentWidth, currentY);
+    currentY += 8;
+
+    if (isPrescription) {
+      const medicines = activeDocData.medicines || [];
+      medicines.forEach((med: any, idx: number) => {
+        checkPageBreak(35);
+        doc.setFillColor(248, 250, 252); // slate-50 background for card
+        doc.rect(leftMargin - 2, currentY - 5, contentWidth + 4, 32, "F");
+        doc.setDrawColor(226, 232, 240); // slate-200 border
+        doc.rect(leftMargin - 2, currentY - 5, contentWidth + 4, 32, "S");
+
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(10.5);
+        doc.setTextColor(14, 116, 144); // cyan-700
+        doc.text(`${idx + 1}. ${med.name || "Unknown Medicine"}`, leftMargin, currentY + 1.5);
+
+        doc.setFont("Helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(71, 85, 105); // slate-600
+
+        doc.text(`${labels.dosage}: ${med.dosage || labels.notSpecified}`, leftMargin + 4, currentY + 7);
+        doc.text(`${labels.frequency}: ${med.timing || labels.onceDaily}`, leftMargin + 85, currentY + 7);
+        doc.text(`${labels.duration}: ${med.duration || "30 days"}`, leftMargin + 4, currentY + 13);
+        
+        const instText = `${labels.instructions}: ${med.instructions || labels.notSpecified}`;
+        const splitInst = doc.splitTextToSize(instText, contentWidth - 10);
+        doc.text(splitInst, leftMargin + 4, currentY + 19);
+
+        currentY += 34; // spacing to next item
+      });
+    } else {
+      const results = activeDocData.labResults || [];
+      results.forEach((res: any, idx: number) => {
+        checkPageBreak(30);
+        doc.setFillColor(248, 250, 252); // slate-50 background card
+        doc.rect(leftMargin - 2, currentY - 5, contentWidth + 4, 26, "F");
+        doc.setDrawColor(226, 232, 240); // slate-200 border
+        doc.rect(leftMargin - 2, currentY - 5, contentWidth + 4, 26, "S");
+
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(10.5);
+        doc.setTextColor(14, 116, 144);
+        doc.text(`${idx + 1}. ${res.name}`, leftMargin, currentY + 1);
+
+        doc.setFont("Helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(71, 85, 105);
+
+        doc.text(`Current Value: ${res.currentValue}  (Normal: ${res.normalRange})`, leftMargin + 4, currentY + 7);
+        
+        const statusColor = res.status === "High" ? [220, 38, 38] : res.status === "Low" ? [37, 99, 235] : [22, 163, 74];
+        doc.setFont("Helvetica", "bold");
+        doc.text("Status: ", leftMargin + 115, currentY + 7);
+        doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+        doc.text(`${res.status || "Normal"}`, leftMargin + 128, currentY + 7);
+
+        doc.setFont("Helvetica", "normal");
+        doc.setTextColor(71, 85, 105);
+        const expText = `Explanation: ${res.explanation || ""}`;
+        const splitExp = doc.splitTextToSize(expText, contentWidth - 10);
+        doc.text(splitExp, leftMargin + 4, currentY + 13);
+
+        currentY += 28;
+      });
+    }
+    
+    currentY += 2;
+
+    // Quick summary Sector
+    checkPageBreak(35);
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(14, 116, 144);
+    doc.text(labels.quickSummary.toUpperCase(), leftMargin, currentY);
+    currentY += 4;
+    doc.setDrawColor(203, 213, 225);
+    doc.line(leftMargin, currentY, leftMargin + contentWidth, currentY);
+    currentY += 8;
+
+    const summarySplit = doc.splitTextToSize(quickSummaryNotes, contentWidth - 10);
+    const boxHeight = (summarySplit.length * 4.5) + 10;
+    
+    checkPageBreak(boxHeight + 5);
+    doc.setFillColor(224, 242, 254); // sky-100 bg
+    doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, boxHeight, "F");
+    doc.setDrawColor(186, 230, 253); // sky-200 border
+    doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, boxHeight, "S");
+
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(3, 105, 161); // sky-700
+    doc.text("DECODED KEY TAKEAWAY:", leftMargin, currentY + 1.5);
+    
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(15, 23, 42); // slate-900
+    doc.text(summarySplit, leftMargin, currentY + 7);
+    
+    currentY += boxHeight + 10;
+
+    // Additional Notes Sector
+    checkPageBreak(30);
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(14, 116, 144);
+    doc.text(labels.additionalNotes.toUpperCase(), leftMargin, currentY);
+    currentY += 4;
+    doc.line(leftMargin, currentY, leftMargin + contentWidth, currentY);
+    currentY += 8;
+
+    const notesSplit = doc.splitTextToSize(summaryNotes, contentWidth - 10);
+    const notesBoxHeight = (notesSplit.length * 4.5) + 8;
+    
+    checkPageBreak(notesBoxHeight + 5);
+    doc.setFillColor(248, 250, 252); // slate-50 bg
+    doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, notesBoxHeight, "F");
+    doc.setDrawColor(226, 232, 240); // slate-200 border
+    doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, notesBoxHeight, "S");
+
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(51, 65, 85); // slate-700
+    doc.text(notesSplit, leftMargin, currentY + 1.5);
+    
+    currentY += notesBoxHeight + 15;
+
+    // Disclaimer alert box (Critical safety)
+    checkPageBreak(25);
+    doc.setFillColor(254, 242, 242); // rose-50 bg
+    doc.setDrawColor(254, 226, 226); // rose-100 border
+    doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, 16, "F");
+    doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, 16, "S");
+
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(220, 38, 38); // rose-600
+    doc.text("MEDICAL DISCLAIMER & RECOMMENDATION:", leftMargin, currentY + 1);
+
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(127, 29, 29); // rose-900
+    doc.text(
+      "This document represents an AI-assisted analysis. Ensure complete clinical review with our medical care staff before",
+      leftMargin,
+      currentY + 5
+    );
+    doc.text(
+      "adjusting therapy courses, active prescriptions, dosages, or general wellness procedures. Do not self-prescribe.",
+      leftMargin,
+      currentY + 8.5
+    );
+
+    const fileName = `${patientName.replace(/\s+/g, "_")}_Prescription_Analysis_Report.pdf`;
 
     try {
-      const blob = new Blob([exportHtml], { type: "text/html;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${patientName.replace(/\s+/g, "_")}_Prescription_Analysis_Report.html`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (downloadErr) {
-      console.error("Diagnostic Summary PDF export failed", downloadErr);
+      // Trigger raw document print file stream download saving
+      doc.save(fileName);
+    } catch (saveErr) {
+      console.warn("Standard PDF save failed, trying fallback stream generation...", saveErr);
+      try {
+        const stringUri = doc.output("datauristring");
+        const link = document.createElement("a");
+        link.href = stringUri;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (uriErr) {
+        console.error("All export paths failed:", uriErr);
+      }
     }
   };
 
