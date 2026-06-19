@@ -7,6 +7,7 @@ import React, { Component, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 import { 
   Brain, 
@@ -788,7 +789,13 @@ export function AppContent() {
     } else {
       const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SpeechRecognitionClass) {
-        alert("Speech Recognition is not supported or permission was denied in this browser. Please check browser settings or permissions.");
+        alert(
+          selectedLanguage === "te"
+            ? "ఈ బ్రౌజర్‌లో స్పీచ్ రికగ్నిషన్ సపోర్ట్ చేయబడదు లేదా యాక్సెస్ నిరాకరించబడింది. దయచేసి బ్రౌజర్ అనుమతులు లేదా మొబైల్ ఫోన్ సెట్టింగులను తనిఖీ చేయండి."
+            : selectedLanguage === "hi"
+            ? "इस ब्राउज़र में स्पीच रिकग्निशन समर्थित नहीं है या अनुमति अस्वीकृत कर दी गई है। कृपया ब्राउज़र अनुमतियों या मोबाइल सेटिंग्स की जांच करें।"
+            : "Speech Recognition is not supported or permission was denied in this browser. Please check browser settings or permissions."
+        );
         return;
       }
       try {
@@ -812,6 +819,18 @@ export function AppContent() {
         recognition.onerror = (event: any) => {
           console.error("Speech recognition error:", event.error);
           setIsListening(false);
+          
+          if (event.error === "not-allowed" || event.error === "permission-blocked") {
+            alert(
+              selectedLanguage === "te"
+                ? "మైక్రోఫోన్ అనుమతి నిరాకరించబడింది. మొబైల్ అనువర్తన సెట్టింగ్‌లలో మన యాప్‌కు మైక్రోఫోన్ అనుమతులు ఉన్నాయో లేదో నిర్ధారించుకోండి."
+                : selectedLanguage === "hi"
+                ? "माइक्रोफ़ोन अनुमति अस्वीकृत। कृपया अपने मोबाइल ऐप सेटिंग्स में इस ऐप के लिए माइक्रोफ़ोन एक्सेस की अनुमति देना सुनिश्चित करें।"
+                : "Microphone permission was denied. If using a mobile app via Median.co, please ensure you have granted Microphone/Audio access permissions in your device's native app settings."
+            );
+          } else {
+            console.warn("Speech recognition error status:", event.error);
+          }
         };
 
         recognition.onend = () => {
@@ -858,11 +877,29 @@ export function AppContent() {
       console.warn("Speech synthesis not supported");
       return;
     }
+
+    // Audio Unlock Pattern: Immediately trigger a silent, empty utterance on the user interaction tick to unlock HTML5 browser context
+    try {
+      const unlockUtterance = new SpeechSynthesisUtterance("");
+      window.speechSynthesis.speak(unlockUtterance);
+    } catch (unlockErr) {
+      console.warn("SpeechSynthesis mobile audio unlock context failed:", unlockErr);
+    }
+
     if (activeSpeechId === msgId) {
-      window.speechSynthesis.cancel();
+      try {
+        window.speechSynthesis.cancel();
+      } catch (err) {
+        console.warn("Cancel speech failed:", err);
+      }
       setActiveSpeechId(null);
     } else {
-      window.speechSynthesis.cancel();
+      try {
+        window.speechSynthesis.cancel();
+      } catch (err) {
+        console.warn("Cancel speech failed:", err);
+      }
+
       const cleanText = text
         .replace(/\*\*([^*]+)\*\*/g, "$1")
         .replace(/[•\-\*]/g, "")
@@ -927,7 +964,17 @@ export function AppContent() {
       utterance.onend = () => setActiveSpeechId(null);
       utterance.onerror = () => setActiveSpeechId(null);
       setActiveSpeechId(msgId);
-      window.speechSynthesis.speak(utterance);
+      
+      // Asynchronous bridge: Execute inside a timeout to allow the initial unprimed unlock event to fully execute on the main thread first, especially in WebView wrappers
+      setTimeout(() => {
+        try {
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {
+          console.error("WebView chatbot delayed speech activation failed:", e);
+          setActiveSpeechId(null);
+        }
+      }, 60);
     }
   };
 
@@ -1713,275 +1760,460 @@ Deciphered outline indicates: ${summaryText}. Take appropriate precautions and c
       : activeDocData.summary;
 
     const reportTitle = isPrescription ? labels.extractedPrescriptionResult : labels.clinicalSummaryDeciphered;
-
-    // Mobile WebView friendly PDF stream generator using jsPDF
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4"
-    });
-
-    const pageWidth = 210;
-    const pageHeight = 297;
-    const leftMargin = 20;
-    const contentWidth = pageWidth - (leftMargin * 2);
-    let currentY = 25;
-
-    const checkPageBreak = (neededHeight: number) => {
-      if (currentY + neededHeight > pageHeight - 25) {
-        doc.addPage();
-        drawPageBorder();
-        currentY = 25;
-      }
-    };
-
-    const drawPageBorder = () => {
-      // Clinical accents
-      doc.setFillColor(14, 165, 233); // cyan-500
-      doc.rect(0, 0, pageWidth, 4, "F");
-
-      // Footer disclaimer
-      doc.setFont("Helvetica", "oblique");
-      doc.setFontSize(8);
-      doc.setTextColor(148, 163, 184); // slate-400
-      doc.text(
-        "Powered by MediCode AI — High-fidelity Clinical Analysis Report. Consult a physician for validation.",
-        pageWidth / 2,
-        pageHeight - 12,
-        { align: "center" }
-      );
-      
-      const pageCount = (doc as any).internal.getNumberOfPages();
-      doc.text(`Page ${pageCount}`, pageWidth - leftMargin, pageHeight - 12, { align: "right" });
-    };
-
-    // Draw page decorations on first page
-    drawPageBorder();
-
-    // Clinical Analysis Report Header
-    doc.setFillColor(30, 41, 59); // slate-800
-    doc.rect(leftMargin - 2, currentY, contentWidth + 4, 12, "F");
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(255, 255, 255);
-    doc.text(reportTitle.toUpperCase(), pageWidth / 2, currentY + 7.5, { align: "center" });
-    
-    currentY += 21;
-
-    // Patient Details Sector
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(14, 116, 144); // cyan-700
-    doc.text(labels.patientName.toUpperCase(), leftMargin, currentY);
-    currentY += 4;
-    doc.setDrawColor(203, 213, 225); // slate-300
-    doc.setLineWidth(0.4);
-    doc.line(leftMargin, currentY, leftMargin + contentWidth, currentY);
-    currentY += 8;
-
-    doc.setFont("Helvetica", "normal");
-    doc.setFontSize(9.5);
-    doc.setTextColor(51, 65, 85); // slate-700
-    
-    doc.setFont("Helvetica", "bold");
-    doc.text(`${labels.patientName}:`, leftMargin, currentY);
-    doc.setFont("Helvetica", "normal");
-    doc.text(patientName, leftMargin + 32, currentY);
-    
-    doc.setFont("Helvetica", "bold");
-    doc.text(`${labels.doctorName}:`, leftMargin + 85, currentY);
-    doc.setFont("Helvetica", "normal");
-    doc.text(doctorName, leftMargin + 115, currentY);
-    currentY += 7;
-
-    doc.setFont("Helvetica", "bold");
-    doc.text(`${labels.date}:`, leftMargin, currentY);
-    doc.setFont("Helvetica", "normal");
-    doc.text(date, leftMargin + 32, currentY);
-
-    doc.setFont("Helvetica", "bold");
-    doc.text("Generated:", leftMargin + 85, currentY);
-    doc.setFont("Helvetica", "normal");
-    doc.text(reportGenerated, leftMargin + 115, currentY);
-    currentY += 15;
-
-    // Prescribed / Lab parameters Content Box
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(14, 116, 144); // cyan-700
-    doc.text(isPrescription ? labels.prescribedMedications.toUpperCase() : labels.labResultsHub.toUpperCase(), leftMargin, currentY);
-    currentY += 4;
-    doc.line(leftMargin, currentY, leftMargin + contentWidth, currentY);
-    currentY += 8;
-
-    if (isPrescription) {
-      const medicines = activeDocData.medicines || [];
-      medicines.forEach((med: any, idx: number) => {
-        checkPageBreak(35);
-        doc.setFillColor(248, 250, 252); // slate-50 background for card
-        doc.rect(leftMargin - 2, currentY - 5, contentWidth + 4, 32, "F");
-        doc.setDrawColor(226, 232, 240); // slate-200 border
-        doc.rect(leftMargin - 2, currentY - 5, contentWidth + 4, 32, "S");
-
-        doc.setFont("Helvetica", "bold");
-        doc.setFontSize(10.5);
-        doc.setTextColor(14, 116, 144); // cyan-700
-        doc.text(`${idx + 1}. ${med.name || "Unknown Medicine"}`, leftMargin, currentY + 1.5);
-
-        doc.setFont("Helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(71, 85, 105); // slate-600
-
-        doc.text(`${labels.dosage}: ${med.dosage || labels.notSpecified}`, leftMargin + 4, currentY + 7);
-        doc.text(`${labels.frequency}: ${med.timing || labels.onceDaily}`, leftMargin + 85, currentY + 7);
-        doc.text(`${labels.duration}: ${med.duration || "30 days"}`, leftMargin + 4, currentY + 13);
-        
-        const instText = `${labels.instructions}: ${med.instructions || labels.notSpecified}`;
-        const splitInst = doc.splitTextToSize(instText, contentWidth - 10);
-        doc.text(splitInst, leftMargin + 4, currentY + 19);
-
-        currentY += 34; // spacing to next item
-      });
-    } else {
-      const results = activeDocData.labResults || [];
-      results.forEach((res: any, idx: number) => {
-        checkPageBreak(30);
-        doc.setFillColor(248, 250, 252); // slate-50 background card
-        doc.rect(leftMargin - 2, currentY - 5, contentWidth + 4, 26, "F");
-        doc.setDrawColor(226, 232, 240); // slate-200 border
-        doc.rect(leftMargin - 2, currentY - 5, contentWidth + 4, 26, "S");
-
-        doc.setFont("Helvetica", "bold");
-        doc.setFontSize(10.5);
-        doc.setTextColor(14, 116, 144);
-        doc.text(`${idx + 1}. ${res.name}`, leftMargin, currentY + 1);
-
-        doc.setFont("Helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(71, 85, 105);
-
-        doc.text(`Current Value: ${res.currentValue}  (Normal: ${res.normalRange})`, leftMargin + 4, currentY + 7);
-        
-        const statusColor = res.status === "High" ? [220, 38, 38] : res.status === "Low" ? [37, 99, 235] : [22, 163, 74];
-        doc.setFont("Helvetica", "bold");
-        doc.text("Status: ", leftMargin + 115, currentY + 7);
-        doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-        doc.text(`${res.status || "Normal"}`, leftMargin + 128, currentY + 7);
-
-        doc.setFont("Helvetica", "normal");
-        doc.setTextColor(71, 85, 105);
-        const expText = `Explanation: ${res.explanation || ""}`;
-        const splitExp = doc.splitTextToSize(expText, contentWidth - 10);
-        doc.text(splitExp, leftMargin + 4, currentY + 13);
-
-        currentY += 28;
-      });
-    }
-    
-    currentY += 2;
-
-    // Quick summary Sector
-    checkPageBreak(35);
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(14, 116, 144);
-    doc.text(labels.quickSummary.toUpperCase(), leftMargin, currentY);
-    currentY += 4;
-    doc.setDrawColor(203, 213, 225);
-    doc.line(leftMargin, currentY, leftMargin + contentWidth, currentY);
-    currentY += 8;
-
-    const summarySplit = doc.splitTextToSize(quickSummaryNotes, contentWidth - 10);
-    const boxHeight = (summarySplit.length * 4.5) + 10;
-    
-    checkPageBreak(boxHeight + 5);
-    doc.setFillColor(224, 242, 254); // sky-100 bg
-    doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, boxHeight, "F");
-    doc.setDrawColor(186, 230, 253); // sky-200 border
-    doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, boxHeight, "S");
-
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(9.5);
-    doc.setTextColor(3, 105, 161); // sky-700
-    doc.text("DECODED KEY TAKEAWAY:", leftMargin, currentY + 1.5);
-    
-    doc.setFont("Helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(15, 23, 42); // slate-900
-    doc.text(summarySplit, leftMargin, currentY + 7);
-    
-    currentY += boxHeight + 10;
-
-    // Additional Notes Sector
-    checkPageBreak(30);
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(14, 116, 144);
-    doc.text(labels.additionalNotes.toUpperCase(), leftMargin, currentY);
-    currentY += 4;
-    doc.line(leftMargin, currentY, leftMargin + contentWidth, currentY);
-    currentY += 8;
-
-    const notesSplit = doc.splitTextToSize(summaryNotes, contentWidth - 10);
-    const notesBoxHeight = (notesSplit.length * 4.5) + 8;
-    
-    checkPageBreak(notesBoxHeight + 5);
-    doc.setFillColor(248, 250, 252); // slate-50 bg
-    doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, notesBoxHeight, "F");
-    doc.setDrawColor(226, 232, 240); // slate-200 border
-    doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, notesBoxHeight, "S");
-
-    doc.setFont("Helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(51, 65, 85); // slate-700
-    doc.text(notesSplit, leftMargin, currentY + 1.5);
-    
-    currentY += notesBoxHeight + 15;
-
-    // Disclaimer alert box (Critical safety)
-    checkPageBreak(25);
-    doc.setFillColor(254, 242, 242); // rose-50 bg
-    doc.setDrawColor(254, 226, 226); // rose-100 border
-    doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, 16, "F");
-    doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, 16, "S");
-
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(220, 38, 38); // rose-600
-    doc.text("MEDICAL DISCLAIMER & RECOMMENDATION:", leftMargin, currentY + 1);
-
-    doc.setFont("Helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(127, 29, 29); // rose-900
-    doc.text(
-      "This document represents an AI-assisted analysis. Ensure complete clinical review with our medical care staff before",
-      leftMargin,
-      currentY + 5
-    );
-    doc.text(
-      "adjusting therapy courses, active prescriptions, dosages, or general wellness procedures. Do not self-prescribe.",
-      leftMargin,
-      currentY + 8.5
-    );
-
     const fileName = `${patientName.replace(/\s+/g, "_")}_Prescription_Analysis_Report.pdf`;
 
-    try {
-      // Trigger raw document print file stream download saving
-      doc.save(fileName);
-    } catch (saveErr) {
-      console.warn("Standard PDF save failed, trying fallback stream generation...", saveErr);
-      try {
-        const stringUri = doc.output("datauristring");
-        const link = document.createElement("a");
-        link.href = stringUri;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (uriErr) {
-        console.error("All export paths failed:", uriErr);
+    const generateSimpleVectorPdf = () => {
+      // Mobile WebView friendly PDF stream generator using jsPDF
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
+
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const leftMargin = 20;
+      const contentWidth = pageWidth - (leftMargin * 2);
+      let currentY = 25;
+
+      const checkPageBreak = (neededHeight: number) => {
+        if (currentY + neededHeight > pageHeight - 25) {
+          doc.addPage();
+          drawPageBorder();
+          currentY = 25;
+        }
+      };
+
+      const drawPageBorder = () => {
+        // Clinical accents
+        doc.setFillColor(14, 165, 233); // cyan-500
+        doc.rect(0, 0, pageWidth, 4, "F");
+
+        // Footer disclaimer
+        doc.setFont("Helvetica", "oblique");
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184); // slate-400
+        doc.text(
+          "Powered by MediCode AI — High-fidelity Clinical Analysis Report. Consult a physician for validation.",
+          pageWidth / 2,
+          pageHeight - 12,
+          { align: "center" }
+        );
+        
+        const pageCount = (doc as any).internal.getNumberOfPages();
+        doc.text(`Page ${pageCount}`, pageWidth - leftMargin, pageHeight - 12, { align: "right" });
+      };
+
+      // Draw page decorations on first page
+      drawPageBorder();
+
+      // Clinical Analysis Report Header
+      doc.setFillColor(30, 41, 59); // slate-800
+      doc.rect(leftMargin - 2, currentY, contentWidth + 4, 12, "F");
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(255, 255, 255);
+      doc.text(reportTitle.toUpperCase(), pageWidth / 2, currentY + 7.5, { align: "center" });
+      
+      currentY += 21;
+
+      // Patient Details Sector
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(14, 116, 144); // cyan-700
+      doc.text(labels.patientName.toUpperCase(), leftMargin, currentY);
+      currentY += 4;
+      doc.setDrawColor(203, 213, 225); // slate-300
+      doc.setLineWidth(0.4);
+      doc.line(leftMargin, currentY, leftMargin + contentWidth, currentY);
+      currentY += 8;
+
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(51, 65, 85); // slate-700
+      
+      doc.setFont("Helvetica", "bold");
+      doc.text(`${labels.patientName}:`, leftMargin, currentY);
+      doc.setFont("Helvetica", "normal");
+      doc.text(patientName, leftMargin + 32, currentY);
+      
+      doc.setFont("Helvetica", "bold");
+      doc.text(`${labels.doctorName}:`, leftMargin + 85, currentY);
+      doc.setFont("Helvetica", "normal");
+      doc.text(doctorName, leftMargin + 115, currentY);
+      currentY += 7;
+
+      doc.setFont("Helvetica", "bold");
+      doc.text(`${labels.date}:`, leftMargin, currentY);
+      doc.setFont("Helvetica", "normal");
+      doc.text(date, leftMargin + 32, currentY);
+
+      doc.setFont("Helvetica", "bold");
+      doc.text("Generated:", leftMargin + 85, currentY);
+      doc.setFont("Helvetica", "normal");
+      doc.text(reportGenerated, leftMargin + 115, currentY);
+      currentY += 15;
+
+      // Prescribed / Lab parameters Content Box
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(14, 116, 144); // cyan-700
+      doc.text(isPrescription ? labels.prescribedMedications.toUpperCase() : labels.labResultsHub.toUpperCase(), leftMargin, currentY);
+      currentY += 4;
+      doc.line(leftMargin, currentY, leftMargin + contentWidth, currentY);
+      currentY += 8;
+
+      if (isPrescription) {
+        const medicines = activeDocData.medicines || [];
+        medicines.forEach((med: any, idx: number) => {
+          checkPageBreak(35);
+          doc.setFillColor(248, 250, 252); // slate-50 background for card
+          doc.rect(leftMargin - 2, currentY - 5, contentWidth + 4, 32, "F");
+          doc.setDrawColor(226, 232, 240); // slate-200 border
+          doc.rect(leftMargin - 2, currentY - 5, contentWidth + 4, 32, "S");
+
+          doc.setFont("Helvetica", "bold");
+          doc.setFontSize(10.5);
+          doc.setTextColor(14, 116, 144); // cyan-700
+          doc.text(`${idx + 1}. ${med.name || "Unknown Medicine"}`, leftMargin, currentY + 1.5);
+
+          doc.setFont("Helvetica", "normal");
+          doc.setFontSize(9);
+          doc.setTextColor(71, 85, 105); // slate-600
+
+          doc.text(`${labels.dosage}: ${med.dosage || labels.notSpecified}`, leftMargin + 4, currentY + 7);
+          doc.text(`${labels.frequency}: ${med.timing || labels.onceDaily}`, leftMargin + 85, currentY + 7);
+          doc.text(`${labels.duration}: ${med.duration || "30 days"}`, leftMargin + 4, currentY + 13);
+          
+          const instText = `${labels.instructions}: ${med.instructions || labels.notSpecified}`;
+          const splitInst = doc.splitTextToSize(instText, contentWidth - 10);
+          doc.text(splitInst, leftMargin + 4, currentY + 19);
+
+          currentY += 34; // spacing to next item
+        });
+      } else {
+        const results = activeDocData.labResults || [];
+        results.forEach((res: any, idx: number) => {
+          checkPageBreak(30);
+          doc.setFillColor(248, 250, 252); // slate-50 background card
+          doc.rect(leftMargin - 2, currentY - 5, contentWidth + 4, 26, "F");
+          doc.setDrawColor(226, 232, 240); // slate-200 border
+          doc.rect(leftMargin - 2, currentY - 5, contentWidth + 4, 26, "S");
+
+          doc.setFont("Helvetica", "bold");
+          doc.setFontSize(10.5);
+          doc.setTextColor(14, 116, 144);
+          doc.text(`${idx + 1}. ${res.name}`, leftMargin, currentY + 1);
+
+          doc.setFont("Helvetica", "normal");
+          doc.setFontSize(9);
+          doc.setTextColor(71, 85, 105);
+
+          doc.text(`Current Value: ${res.currentValue}  (Normal: ${res.normalRange})`, leftMargin + 4, currentY + 7);
+          
+          const statusColor = res.status === "High" ? [220, 38, 38] : res.status === "Low" ? [37, 99, 235] : [22, 163, 74];
+          doc.setFont("Helvetica", "bold");
+          doc.text("Status: ", leftMargin + 115, currentY + 7);
+          doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+          doc.text(`${res.status || "Normal"}`, leftMargin + 128, currentY + 7);
+
+          doc.setFont("Helvetica", "normal");
+          doc.setTextColor(71, 85, 105);
+          const expText = `Explanation: ${res.explanation || ""}`;
+          const splitExp = doc.splitTextToSize(expText, contentWidth - 10);
+          doc.text(splitExp, leftMargin + 4, currentY + 13);
+
+          currentY += 28;
+        });
       }
+      
+      currentY += 2;
+
+      // Quick summary Sector
+      checkPageBreak(35);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(14, 116, 144);
+      doc.text(labels.quickSummary.toUpperCase(), leftMargin, currentY);
+      currentY += 4;
+      doc.setDrawColor(203, 213, 225);
+      doc.line(leftMargin, currentY, leftMargin + contentWidth, currentY);
+      currentY += 8;
+
+      const summarySplit = doc.splitTextToSize(quickSummaryNotes, contentWidth - 10);
+      const boxHeight = (summarySplit.length * 4.5) + 10;
+      
+      checkPageBreak(boxHeight + 5);
+      doc.setFillColor(224, 242, 254); // sky-100 bg
+      doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, boxHeight, "F");
+      doc.setDrawColor(186, 230, 253); // sky-200 border
+      doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, boxHeight, "S");
+
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(9.5);
+      doc.setTextColor(3, 105, 161); // sky-700
+      doc.text("DECODED KEY TAKEAWAY:", leftMargin, currentY + 1.5);
+      
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(15, 23, 42); // slate-900
+      doc.text(summarySplit, leftMargin, currentY + 7);
+      
+      currentY += boxHeight + 10;
+
+      // Additional Notes Sector
+      checkPageBreak(30);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(14, 116, 144);
+      doc.text(labels.additionalNotes.toUpperCase(), leftMargin, currentY);
+      currentY += 4;
+      doc.line(leftMargin, currentY, leftMargin + contentWidth, currentY);
+      currentY += 8;
+
+      const notesSplit = doc.splitTextToSize(summaryNotes, contentWidth - 10);
+      const notesBoxHeight = (notesSplit.length * 4.5) + 8;
+      
+      checkPageBreak(notesBoxHeight + 5);
+      doc.setFillColor(248, 250, 252); // slate-50 bg
+      doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, notesBoxHeight, "F");
+      doc.setDrawColor(226, 232, 240); // slate-200 border
+      doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, notesBoxHeight, "S");
+
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(51, 65, 85); // slate-700
+      doc.text(notesSplit, leftMargin, currentY + 1.5);
+      
+      currentY += notesBoxHeight + 15;
+
+      // Disclaimer alert box (Critical safety)
+      checkPageBreak(25);
+      doc.setFillColor(254, 242, 242); // rose-50 bg
+      doc.setDrawColor(254, 226, 226); // rose-100 border
+      doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, 16, "F");
+      doc.rect(leftMargin - 2, currentY - 4, contentWidth + 4, 16, "S");
+
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(8);
+      doc.setTextColor(220, 38, 38); // rose-600
+      doc.text("MEDICAL DISCLAIMER & RECOMMENDATION:", leftMargin, currentY + 1);
+
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(127, 29, 29); // rose-900
+      doc.text(
+        "This document represents an AI-assisted analysis. Ensure complete clinical review with our medical care staff before",
+        leftMargin,
+        currentY + 5
+      );
+      doc.text(
+        "adjusting therapy courses, active prescriptions, dosages, or general wellness procedures. Do not self-prescribe.",
+        leftMargin,
+        currentY + 8.5
+      );
+
+      try {
+        // Trigger raw document print file stream download saving
+        doc.save(fileName);
+      } catch (saveErr) {
+        console.warn("Standard PDF save failed, trying fallback stream generation...", saveErr);
+        try {
+          const stringUri = doc.output("datauristring");
+          const link = document.createElement("a");
+          link.href = stringUri;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (uriErr) {
+          console.error("All export paths failed:", uriErr);
+        }
+      }
+    };
+
+    if (selectedLanguage === "te" || selectedLanguage === "hi") {
+      // Create high-fidelity HTML representing a medical letterhead
+      const container = document.createElement("div");
+      container.style.position = "absolute";
+      container.style.left = "-9999px";
+      container.style.top = "0";
+      container.style.width = "720px";
+      container.style.backgroundColor = "#ffffff";
+      container.style.padding = "45px";
+      container.style.boxSizing = "border-box";
+      container.style.fontFamily = "system-ui, -apple-system, sans-serif";
+      container.style.color = "#0f172a";
+
+      let medicinesHtml = "";
+      if (isPrescription) {
+        const medicines = activeDocData.medicines || [];
+        medicinesHtml = medicines.map((med: any, idx: number) => `
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+            <span style="font-size: 14px; font-weight: bold; color: #0891b2; margin: 0 0 10px 0; display: block;">${idx + 1}. ${med.name || "Unknown Medicine"}</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; color: #475569;">
+              <div><strong>${labels.dosage || "Dosage"}:</strong> ${med.dosage || labels.notSpecified}</div>
+              <div><strong>${labels.frequency || "Frequency"}:</strong> ${med.timing || labels.onceDaily}</div>
+              <div><strong>${labels.duration || "Duration"}:</strong> ${med.duration || "30 days"}</div>
+            </div>
+            <div style="font-size: 12px; color: #475569; margin-top: 8px; border-top: 1px solid #f1f5f9; padding-top: 8px;">
+              <strong>${labels.instructions || "Instructions"}:</strong> ${med.instructions || labels.notSpecified}
+            </div>
+          </div>
+        `).join("");
+      } else {
+        const results = activeDocData.labResults || [];
+        medicinesHtml = results.map((res: any, idx: number) => {
+          const isHigh = res.status === "High";
+          const isLow = res.status === "Low";
+          const statusColor = isHigh ? "#dc2626" : isLow ? "#2563eb" : "#16a34a";
+          const statusBg = isHigh ? "#fef2f2" : isLow ? "#eff6ff" : "#f0fdf4";
+          return `
+            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 14px; font-weight: bold; color: #0891b2; margin: 0;">${idx + 1}. ${res.name}</span>
+                <span style="background-color: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusColor}40; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">
+                  ${res.status || "Normal"}
+                </span>
+              </div>
+              <div style="font-size: 12px; color: #475569; margin-bottom: 8px;">
+                <strong>Current Value:</strong> <span style="font-weight: bold; color: #0f172a;">${res.currentValue}</span> 
+                <span style="color: #94a3b8; margin: 0 6px;">|</span>
+                <strong>Normal Range:</strong> ${res.normalRange}
+              </div>
+              <div style="font-size: 12px; color: #475569; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+                <strong>Explanation:</strong> ${res.explanation || ""}
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      container.innerHTML = `
+        <div style="border-top: 4px solid #06b6d4; padding-top: 15px;">
+          <!-- Letterhead header -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0891b2; padding-bottom: 15px; margin-bottom: 25px;">
+            <div>
+              <h1 style="font-size: 22px; font-weight: 850; color: #0891b2; margin: 0; letter-spacing: -0.5px;">MEDICODE AI SUMMARY</h1>
+              <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: #64748b; margin: 3px 0 0 0;">High-Fidelity Automated Decipherment Report</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="background-color: #f1f5f9; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase;">
+                ${selectedLanguage === "te" ? "భాష: తెలుగు" : "भाषा: हिंदी"}
+              </div>
+            </div>
+          </div>
+
+          <!-- Document Title -->
+          <div style="text-align: center; margin-bottom: 25px;">
+            <h2 style="font-size: 16px; font-weight: 800; color: #1e293b; text-transform: uppercase; margin: 0;">${reportTitle}</h2>
+          </div>
+
+          <!-- Clinical Grid Metadata -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; margin-bottom: 25px;">
+            <div>
+              <span style="font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 2px;">${labels.patientName}</span>
+              <span style="font-size: 13px; font-weight: 700; color: #0f172a;">${patientName}</span>
+            </div>
+            <div>
+              <span style="font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 2px;">${labels.doctorName}</span>
+              <span style="font-size: 13px; font-weight: 700; color: #0f172a;">${doctorName}</span>
+            </div>
+            <div>
+              <span style="font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 2px;">${labels.date}</span>
+              <span style="font-size: 13px; font-weight: 700; color: #0f172a;">${date}</span>
+            </div>
+            <div>
+              <span style="font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 2px;">Report Generated</span>
+              <span style="font-size: 13px; font-weight: 700; color: #0f172a;">${reportGenerated}</span>
+            </div>
+          </div>
+
+          <!-- Quick Takeaways Section -->
+          <div style="margin-bottom: 25px;">
+            <h3 style="font-size: 12px; font-weight: 800; color: #0891b2; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 10px;">${labels.quickSummary}</h3>
+            <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-left: 4px solid #0284c7; border-radius: 8px; padding: 12px; font-size: 12px; color: #0369a1; line-height: 1.5; font-weight: 500;">
+              <strong style="font-size: 10px; text-transform: uppercase; display: block; margin-bottom: 4px;">Decoded Takeaway / ముఖ్య సారాంశం:</strong>
+              ${quickSummaryNotes}
+            </div>
+          </div>
+
+          <!-- Detailed Parameters Section -->
+          <div style="margin-bottom: 25px;">
+            <h3 style="font-size: 12px; font-weight: 800; color: #0891b2; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 15px;">
+              ${isPrescription ? labels.prescribedMedications : labels.labResultsHub}
+            </h3>
+            <div>
+              ${medicinesHtml}
+            </div>
+          </div>
+
+          <!-- Additional Notes -->
+          <div style="margin-bottom: 25px;">
+            <h3 style="font-size: 12px; font-weight: 800; color: #0891b2; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 10px;">${labels.additionalNotes}</h3>
+            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; font-size: 12px; color: #475569; line-height: 1.5;">
+              ${summaryNotes}
+            </div>
+          </div>
+
+          <!-- Disclaimer alert box -->
+          <div style="background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 12px; margin-top: 30px;">
+            <span style="font-size: 10px; font-weight: bold; color: #e11d48; text-transform: uppercase; display: block; margin-bottom: 4px; letter-spacing: 0.5px;">MEDICAL DISCLAIMER & RECOMMENDATION:</span>
+            <p style="font-size: 10px; color: #9f1239; margin: 0; line-height: 1.4;">
+              This document represents an AI-assisted analysis. Ensure complete clinical review with our medical care staff before adjusting therapy courses, active prescriptions, dosages, or general wellness procedures. Do not self-prescribe.
+            </p>
+          </div>
+
+          <!-- Footer brand sign -->
+          <div style="text-align: center; font-size: 8px; color: #94a3b8; font-style: italic; margin-top: 35px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+            Powered by MediCode AI — High-fidelity Clinical Analysis Decipherment Report.
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(container);
+
+      // Render high resolution snapshot using html2canvas
+      html2canvas(container, {
+        scale: 2, // High clarity multiplier
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: "#ffffff"
+      }).then((canvas) => {
+        document.body.removeChild(container);
+
+        const imgData = canvas.toDataURL("image/jpeg", 0.95);
+        const pdf = new jsPDF({
+          orientation: "portrait",
+          unit: "mm",
+          format: "a4"
+        });
+
+        const imgWidth = 210;
+        const pageHeight = 297;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        pdf.save(fileName);
+      }).catch((canvasErr) => {
+        console.error("Fidelity canvas generation error, falling back to simple vector:", canvasErr);
+        document.body.removeChild(container);
+        generateSimpleVectorPdf();
+      });
+    } else {
+      generateSimpleVectorPdf();
     }
   };
 
