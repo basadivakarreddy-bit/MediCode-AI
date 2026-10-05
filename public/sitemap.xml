@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml"
+>
+  <!-- Main Home & Clinical Decoder Workspace -->
+  <url>
+    <loc>https://medi-code-ai-xi.vercel.app/</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://medi-code-ai-xi.vercel.app/?lang=en" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://medi-code-ai-xi.vercel.app/?lang=hi" />
+    <xhtml:link rel="alternate" hreflang="te" href="https://medi-code-ai-xi.vercel.app/?lang=te" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://medi-code-ai-xi.vercel.app/" />
+  </url>
+
+  <!-- AI Prescription & Lab Report Scanner -->
+  <url>
+    <loc>https://medi-code-ai-xi.vercel.app/scanner</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Patient Document Vault & Clinical Archives -->
+  <url>
+    <loc>https://medi-code-ai-xi.vercel.app/vault</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Longitudinal Health Timeline & Biomarker Analytics -->
+  <url>
+    <loc>https://medi-code-ai-xi.vercel.app/timeline</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Multi-Profile Family Health Hub -->
+  <url>
+    <loc>https://medi-code-ai-xi.vercel.app/family</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Clinical FAQ & Support Center -->
+  <url>
+    <loc>https://medi-code-ai-xi.vercel.app/faq</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>

@@ -658,6 +658,37 @@ export function AppContent() {
   const [selectedDocId, setSelectedDocId] = useState<string>("doc-1");
   const activeDoc = documents.find(d => d.id === selectedDocId) || documents[0];
 
+  // Handle initial URL path & query parameters for SEO sitemap deep links
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const langParam = params.get("lang");
+    if (langParam === "en" || langParam === "hi" || langParam === "te") {
+      setSelectedLanguage(langParam);
+    }
+
+    const pathname = window.location.pathname.replace(/\/+$/, "").toLowerCase();
+    const scrollToSection = (id: string) => {
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 250);
+    };
+
+    if (pathname === "/scanner") {
+      scrollToSection("scanner");
+    } else if (pathname === "/vault") {
+      setIsHistoryOpen(true);
+      setHistorySubTab("archives");
+    } else if (pathname === "/timeline") {
+      scrollToSection("timeline");
+    } else if (pathname === "/family") {
+      scrollToSection("family");
+    } else if (pathname === "/faq") {
+      scrollToSection("faq");
+    }
+  }, []);
+
   // Prefetch translations in the background for any active document so user toggles are instant
   useEffect(() => {
     if (!activeDoc || !activeDoc.data) return;

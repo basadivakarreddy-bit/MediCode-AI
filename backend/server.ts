@@ -783,6 +783,21 @@ If you have a primary key, you can configure it under settings to reactivate liv
   }
 });
 
+// Serve sitemap.xml and robots.txt with explicit content-type headers
+app.get("/sitemap.xml", (req, res) => {
+  const publicSitemap = path.join(process.cwd(), "public", "sitemap.xml");
+  const distSitemap = path.join(process.cwd(), "dist", "sitemap.xml");
+  res.setHeader("Content-Type", "application/xml; charset=utf-8");
+  res.sendFile(process.env.NODE_ENV === "production" ? distSitemap : publicSitemap);
+});
+
+app.get("/robots.txt", (req, res) => {
+  const publicRobots = path.join(process.cwd(), "public", "robots.txt");
+  const distRobots = path.join(process.cwd(), "dist", "robots.txt");
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.sendFile(process.env.NODE_ENV === "production" ? distRobots : publicRobots);
+});
+
 // Setup Vite & static assets route handlers
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
